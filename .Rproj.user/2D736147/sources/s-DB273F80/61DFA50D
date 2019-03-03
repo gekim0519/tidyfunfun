@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1551385451919.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "61DFA50D",
+    "lastKnownWriteTime" : 1551321883,
+    "last_content_update" : 1551321883,
+    "path" : "~/Desktop/study/tidyfun/function/fpca.tfd.R",
+    "project_path" : "function/fpca.tfd.R",
+    "properties" : {
+        "cursorPosition" : "4,37",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
