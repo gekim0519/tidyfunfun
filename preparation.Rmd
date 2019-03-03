@@ -7,13 +7,11 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(tidyfun)
 library(tidyverse)
 library(ggplot2)
+library(refund)
+library(reshape2)
 ```
 
 handwrting data
@@ -21,8 +19,6 @@ handwrting data
 # cursive handwriting coordinates
 #load data
 load("./data/handwrit.rda")
-
-source("./quadWeights.R")
 
 handwrit_time <- handwritTime %>% as.tibble() %>%
   janitor::clean_names()
@@ -201,7 +197,7 @@ ydata$.value <- unlist(tapply(ydata$.index,
                               )
                        )
 
-Fit.MM = refund::fpca.sc(ydata=ydata, var = TRUE, simul = FALSE)
+Fit.MM = fpca.sc(ydata=ydata, var = TRUE, simul = FALSE)
 
 ```
 
@@ -229,9 +225,6 @@ ggplot(fit.mu, aes(x = days, y = mu)) + geom_path() +
 # estimated eigenvalues of the covariance operator, i.e., variances of FPC scores.
 fit.cw$evalues
 fit.cw$evalues*100/sum(fit.cw$evalues)
-
-# three eigenvalues??
-#refund shiny
 ```
 
 ```{r}
@@ -240,7 +233,7 @@ rcst <- dti$rcst %>%
   as.data.frame() %>%
   spread(key = arg, value = value) %>%
   select(-id) %>%
-  as.matrix()
+  as.matrix() 
 
 fit.rcst = fpca.sc(rcst, var = TRUE, simul = TRUE)
 
@@ -249,15 +242,11 @@ rcst_df <- dti$rcst %>%
   as.data.frame() %>%
   select(.id = id, .index = arg, .value = value) %>%
   mutate(.id = as.integer(.id))
-
-fit.rcst.df <- fpca.sc(rcst_df , var = TRUE, simul = TRUE)
-rcst_df %>% str()
-ydata %>% str()
 ```
 
 ```{r}
 #testing diff tfd
-dti$cca %>% 
+cca.fit = dti$cca %>% 
   as.data.frame() %>%
   spread(key = arg, value = value) %>%
   select(-id) %>%
@@ -265,7 +254,7 @@ dti$cca %>%
   fpca.sc()
   
 
-temp_tfd$temp %>% 
+temp.fit = temp_tfd$temp %>% 
   as.data.frame() %>%
   spread(key = arg, value = value) %>%
   select(-id) %>%
