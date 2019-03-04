@@ -115,8 +115,404 @@ y = value, group = variable, color = variable)) + geom_path()
 ```
 looks same as the tfd version!
 
-Refund - OLS_CS.R 
+bayes_fosr:
+"Wrapper function that implements several approaches to Bayesian function on scalar regression."
+
+Exammple code from refund
+
+* I am getting errors regarding gibbs so I removed it from the sample for now.
+* error message: Error in tx[, ind.cur] %*% siginv : non-conformable arguments
+```{r}
+##### Cross-sectional real-data examples #####
+
+## organize data
+#data(DTI)
+DTI = subset(DTI, select = c(cca, case, pasat))
+DTI = DTI[complete.cases(DTI),]
+DTI$gender = factor(sample(c("male","female"), dim(DTI)[1], replace = TRUE))
+DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
+
+## fit models
+default = bayes_fosr(cca ~ pasat, data = DTI)
+VB = bayes_fosr(cca ~ pasat, data = DTI, Kp = 4, Kt = 10)
+#Gibbs = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = #"Wishart", N.iter = 500, N.burn = 200)
+OLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "OLS")
+GLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "GLS")
+
+## plot results
+models = c("default", "VB", "OLS", "GLS")
+intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
+slopes = sapply(models, function(u) get(u)$beta.hat[2,])
+
+plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
+ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw()
+
+plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
+ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw()
+
+#Gibbs - Error in tx[, ind.cur] %*% siginv : non-conformable arguments
+# removed Gibbs
+```
+
+ols_cs:
 "Fitting function for function-on-scalar regression for cross-sectional data."
+```{r}
+dti.ols = ols_cs(cca ~ pasat, data = DTI, Kt = 10)
+```
+
+```{r}
+library(splines)
+library(pbs)
+```
+
+```{r}
+ols_cs_prac = function(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
+  
+  call <- match.call()
+  tf <- terms.formula(formula, specials = "re")
+  trmstrings <- attr(tf, "term.labels")
+  specials <- attr(tf, "specials")
+  where.re <-specials$re - 1
+  if (length(where.re) != 0) {
+    mf_fixed <- model.frame(tf[-where.re], data = data)
+    formula = tf[-where.re]
+    responsename <- attr(tf, "variables")[2][[1]]
+    ###
+    REs = list(NA, NA)
+    REs[[1]] = names(eval(parse(text=attr(tf[where.re], "term.labels")), envir=data)$data)
+    REs[[2]]=paste0("(1|",REs[[1]],")")
+    ###
+    formula2 <- paste(responsename, "~", REs[[1]], sep = "")
+    newfrml <- paste(responsename, "~", REs[[2]], sep = "")
+    newtrmstrings <- attr(tf[-where.re], "term.labels")
+    formula2 <- formula(paste(c(formula2, newtrmstrings), 
+                              collapse = "+"))
+    newfrml <- formula(paste(c(newfrml, newtrmstrings), collapse = "+"))
+    mf <- model.frame(formula2, data = data)
+    if (length(data) == 0) {
+      Z = lme4::mkReTrms(lme4::findbars(newfrml), fr = mf)$Zt
+    }
+    else {
+      Z = lme4::mkReTrms(lme4::findbars(newfrml), fr = data)$Zt
+    }
+  }
+  else {
+    mf_fixed <- model.frame(tf, data = data)
+  }
+  mt_fixed <- attr(mf_fixed, "terms")
+  
+  # get response (Y)
+  Y <- model.response(mf_fixed, "numeric")
+  
+  # x is a matrix of fixed effects
+  # automatically adds in intercept
+  X <- model.matrix(mt_fixed, mf_fixed, contrasts)
+  
+  ### model organization ###
+  D = dim(Y)[2]
+  I = dim(X)[1]
+  p = dim(X)[2]
+  
+  if(basis == "bs"){
+    Theta = bs(1:D, df = Kt, intercept=TRUE, degree=3)
+  } else if(basis == "pbs"){
+    Theta = pbs(1:D, df = Kt, intercept=TRUE, degree=3)
+  }
+
+  X.des = X
+  Y.vec = as.vector(t(Y)) 
+  X = kronecker(X.des, Theta)
+  n.coef = dim(X.des)[2]
+  
+  ## OLS model fitting and processing results
+  if(verbose) { cat("Using OLS to estimate model parameters \n") }
+  model.ols = lm(Y.vec ~ -1 + X)
+  Bx.ols = matrix(model.ols$coef, nrow = Kt, ncol = n.coef)  
+  beta.hat.ols = t(Bx.ols) %*% t(Theta)
+    
+  resid.mat = matrix(resid(model.ols), I, D, byrow = TRUE)
+    
+  ## Get Residual Structure using FPCA
+  ## note: this is commented out because, in simulations based on the headstart data, 
+  ## using FPCA lead to higher-than-nominal sizes for tests of nested models. 
+  ## using the raw covariance worked better. using FPCA is possible, but relies
+  ## on some case-specific choices.
+  # raw.resid.cov = cov(resid.mat)
+  # fpca.resid = fpca.sc(resid.mat, pve = .9995, nbasis = 20)
+  # resid.cov = with(fpca.resid, efunctions %*% diag(evalues) %*% t(efunctions))
+    
+  ## account for (possibly non-constant) ME nugget effect
+  # sm.diag = Theta %*% solve(crossprod(Theta)) %*% t(Theta) %*% (diag(raw.resid.cov) - diag(resid.cov))
+  # if(sum( sm.diag < 0 ) >0) { sm.diag[ sm.diag < 0] = min((diag(raw.resid.cov) - diag(resid.cov))[ sm.diag < 0])}
+  # diag(resid.cov) = diag(resid.cov) + sm.diag
+    
+  sigma = cov(resid.mat) * (I - 1) / (I - p)
+  
+  ## get confidence intervals
+  beta.UB = beta.LB = matrix(NA, p, D)
+  for(p.cur in 1:p){
+    ## confidence intervals for this model shouldn't be trusted
+  }
+  
+  Yhat = X.des %*% beta.hat.ols
+  
+  ret = list(beta.hat.ols, beta.UB, beta.LB, Yhat, mt_fixed, data, model.ols, sigma)
+  names(ret) = c("beta.hat", "beta.UB", "beta.LB", "Yhat", "terms", "data", "model.ols", "sigma")
+  class(ret) = "fosr"
+  ret
+    
+}
+```
+
+```{r}
+dti.ols.prac = ols_cs_prac(cca ~ pasat, data = DTI, Kt = 10)
+```
+
 
 gibbs_cs_fpca:
 "Cross-sectional FoSR using a Gibbs sampler and FPCA"
+```{r}
+gibbs_cs_fpca(cca ~ pasat, data = DTI, Kt = 10)
+gibbs_cs_fpca_prac(cca ~ pasat, data = DTI, Kt = 10)
+
+#keeps on running...
+```
+
+```{r}
+library(MASS)
+library(lme4)
+gibbs_cs_fpca_prac = function(formula, Kt=5, Kp=2, data=NULL, verbose = TRUE, N.iter = 5000, N.burn = 1000, SEED = NULL, 
+                         sig2.me = .01, alpha = .1, Aw = NULL, Bw = NULL, Apsi = NULL, Bpsi = NULL){
+
+  call <- match.call()
+  tf <- terms.formula(formula, specials = "re")
+  trmstrings <- attr(tf, "term.labels")
+  specials <- attr(tf, "specials")
+  where.re <-specials$re - 1
+  if (length(where.re) != 0) {
+    mf_fixed <- model.frame(tf[-where.re], data = data)
+    formula = tf[-where.re]
+    responsename <- attr(tf, "variables")[2][[1]]
+    ###
+    REs = list(NA, NA)
+    REs[[1]] = names(eval(parse(text=attr(tf[where.re], "term.labels")), envir=data)$data)
+    REs[[2]]=paste0("(1|",REs[[1]],")")
+    ###
+    formula2 <- paste(responsename, "~", REs[[1]], sep = "")
+    newfrml <- paste(responsename, "~", REs[[2]], sep = "")
+    newtrmstrings <- attr(tf[-where.re], "term.labels")
+    formula2 <- formula(paste(c(formula2, newtrmstrings), 
+                              collapse = "+"))
+    newfrml <- formula(paste(c(newfrml, newtrmstrings), collapse = "+"))
+    mf <- model.frame(formula2, data = data)
+    if (length(data) == 0) {
+      Z = lme4::mkReTrms(lme4::findbars(newfrml), fr = mf)$Zt
+    }
+    else {
+      Z = lme4::mkReTrms(lme4::findbars(newfrml), fr = data)$Zt
+    }
+  }
+  else {
+    mf_fixed <- model.frame(tf, data = data)
+  }
+  mt_fixed <- attr(mf_fixed, "terms")
+  
+  # get response (Y)
+  Y <- model.response(mf_fixed, "numeric")
+  
+  if(!is.null(SEED)) { set.seed(SEED) }
+  
+  # x is a matrix of fixed effects
+  # automatically adds in intercept
+  W.des = X <- model.matrix(mt_fixed, mf_fixed, contrasts)
+  
+  ## subject covariates
+  I = dim(X)[1]
+  D = dim(Y)[2]
+  p = dim(X)[2]
+  
+  ## bspline basis and penalty matrix
+  Theta = bs(1:D, df=Kt, intercept=TRUE, degree=3)
+  
+  diff0 = diag(1, D, D)
+  diff2 = matrix(rep(c(1,-2,1, rep(0, D-2)), D-2)[1:((D-2)*D)], D-2, D, byrow = TRUE)
+  P0 = t(Theta) %*% t(diff0) %*% diff0 %*% Theta
+  P2 = t(Theta) %*% t(diff2) %*% diff2 %*% Theta
+  P.mat = alpha * P0 + (1-alpha) * P2
+  
+  ## data organization; these computations only need to be done once   
+  Y.vec = as.vector(t(Y))
+  t.designmat.W = t(kronecker(W.des, Theta))
+  sig.W = kronecker(t(W.des) %*% W.des, t(Theta)%*% Theta)
+  
+  ## initial estimation and hyperparameter choice
+  vec.BW = solve(kronecker(t(W.des)%*% W.des, t(Theta) %*% Theta)) %*% t(kronecker(W.des, Theta)) %*% Y.vec
+  mu.q.BW = matrix(vec.BW, Kt, p)
+  
+  Yhat = as.matrix(W.des %*% t(mu.q.BW) %*% t(Theta))
+  
+  Aw = ifelse(is.null(Aw), Kt/2, Aw)
+  if(is.null(Bw)){
+    Bw = b.q.lambda.BW = sapply(1:p, function(u) max(1, .5*sum(diag( t(mu.q.BW[,u]) %*% P.mat %*% (mu.q.BW[,u])))))
+  } else {
+    Bw = b.q.lambda.BW = rep(Bw, p)
+  }
+  
+  Apsi = ifelse(is.null(Apsi), Kt/2, Apsi)
+  Bpsi = ifelse(is.null(Bpsi), Kt/2, Bpsi)
+  Asig = 1; Bsig = 1
+  
+  ## matrices to store within-iteration estimates 
+  BW = array(NA, c(Kt, p, N.iter))
+      BW[,,1] = bw = matrix(0, Kt, p)
+  BPSI = array(NA, c(Kt, Kp, N.iter))
+      BPSI[,,1] = bpsi = matrix(0, Kt, Kp)
+  C = array(NA, c(I, Kp, N.iter))
+      C[,,1] = c.mat = matrix(rnorm(I*Kp, 0, .01), I, Kp)
+  SIGMA = rep(NA, N.iter)
+      SIGMA[1] = sig2.me = sig2.me
+  LAMBDA.BW = matrix(NA, nrow = N.iter, ncol = p)
+      LAMBDA.BW[1,] = lambda.bw = rep(1, p)
+  LAMBDA.PSI = matrix(NA, nrow = N.iter, ncol = Kp)
+      LAMBDA.PSI[1,] = lambda.psi = rep(1,Kp)
+  y.post = array(NA, dim = c(I, D, (N.iter - N.burn))) 
+
+
+  ## initialize estimates of fixed, random and pca effects
+  beta.cur = t(bw) %*% t(Theta)
+  fixef.cur = W.des %*% beta.cur
+  psi.cur = t(bpsi) %*% t(Theta)
+  pcaef.cur = c.mat %*% psi.cur
+
+  if(verbose) { cat("Beginning Sampler \n") }
+  
+  for(i in 1:N.iter){
+    
+    ###############################################################
+    ## update b-spline parameters for fixed effects
+    ###############################################################
+
+    mean.cur = as.vector(t(pcaef.cur))
+
+    sigma = solve( (1/sig2.me) * sig.W + kronecker(diag(1/lambda.bw, length(lambda.bw), length(lambda.bw)), P.mat)  )
+    mu = (1/sig2.me) * sigma %*% (t.designmat.W %*%  (Y.vec - mean.cur))
+      
+    bw = matrix(mvrnorm(1, mu = mu, Sigma = sigma), nrow = Kt, ncol = p)
+    beta.cur = t(bw) %*% t(Theta)
+    fixef.cur = W.des %*% beta.cur
+   
+    ###############################################################
+    ## update b-spline parameters for PC basis functions
+    ###############################################################
+
+    mean.cur = as.vector(t(fixef.cur))
+
+    sigma = solve( (1/sig2.me) * kronecker(t(c.mat) %*% c.mat, t(Theta)%*% Theta) + kronecker(diag(1/lambda.psi), P.mat  ))
+    mu = (1/sig2.me) * sigma %*% t(kronecker(c.mat, Theta)) %*%  (Y.vec - mean.cur)
+
+    bpsi = matrix(mvrnorm(1, mu = mu, Sigma = sigma), nrow = Kt, ncol = Kp)
+    psi.cur = t(bpsi) %*% t(Theta)
+    
+    ppT = psi.cur %*% t(psi.cur)
+
+    ###############################################################
+    ## scores for each individual
+    ###############################################################
+
+    for(c in 1:I){
+      sigma = solve( (1/sig2.me)* ppT + diag(1, Kp, Kp)  )
+      mu = (1/sig2.me) * sigma %*% psi.cur %*%  (Y[c,] - fixef.cur[c,] )     
+      c.mat[c,] = mvrnorm(1, mu = mu, Sigma = sigma)
+    }
+    
+    pcaef.cur = c.mat %*% psi.cur
+
+    ###############################################################
+    ## update variance components
+    ###############################################################
+      
+    ## sigma.me
+    Y.cur = fixef.cur +  pcaef.cur
+    a.post = Asig + I*D/2
+    b.post = Bsig + 1/2*crossprod(as.vector(Y - Y.cur))
+    sig2.me = 1/rgamma(1, a.post, b.post)
+
+    ## lambda for beta's
+    for(term in 1:p){
+      a.post = Aw + Kt/2
+      b.post = Bw[term] + 1/2*bw[,term] %*% P.mat %*% bw[,term]
+      lambda.bw[term] = 1/rgamma(1, a.post, b.post)
+    }
+
+    ## lambda for psi's
+    for(K in 1:Kp){
+      a.post = Apsi + Kt/2
+      b.post = Bpsi + 1/2*bpsi[,K] %*% P.mat %*% bpsi[,K]
+      lambda.psi[K] = 1/rgamma(1, a.post, b.post)
+    }
+
+    ###############################################################
+    ## save this iteration's parameters
+    ###############################################################
+
+    BW[,,i] = as.matrix(bw)
+    BPSI[,,i] = as.matrix(bpsi)
+    C[,,i] = as.matrix(c.mat)
+      
+    SIGMA[i] = sig2.me
+    LAMBDA.BW[i,] = lambda.bw
+    LAMBDA.PSI[i,] = lambda.psi
+
+    if(i > N.burn){
+      y.post[,,i - N.burn] = fixef.cur+pcaef.cur
+    }
+  
+    if(verbose) { if(round(i %% (N.iter/10)) == 0) {cat(".")} }
+    
+  }
+  
+  ###############################################################
+  ## compute posteriors for this dataset
+  ###############################################################
+
+  ## main effects
+  beta.pm = beta.LB = beta.UB = matrix(NA, nrow = p, ncol = D)
+  for(i in 1:p){
+  	beta.post = matrix(NA, nrow = (N.iter - N.burn), ncol = D)
+  	for(n in 1:(N.iter - N.burn)){
+  	  beta.post[n,] = BW[,i, n + N.burn] %*% t(Theta)
+  	}
+  	beta.pm[i,] = apply(beta.post, 2, mean)
+    beta.LB[i,] = apply(beta.post, 2, quantile, c(.025))
+    beta.UB[i,] = apply(beta.post, 2, quantile, c(.975))
+  }
+
+
+  ## FPCA basis functions -- OUT OF DATE
+  psi.pm = matrix(NA, nrow = Kp, ncol = D)
+  for(i in 1:Kp){
+  	psi.post = matrix(NA, nrow = (N.iter - N.burn), ncol = D)
+  	for(n in 1:(N.iter - N.burn)){
+  	  psi.post[n,] = BPSI[,i, n + N.burn] %*% t(Theta)
+  	}
+  	psi.pm[i,] = apply(psi.post, 2, mean)
+  }
+
+  ## export fitted values
+  Yhat = apply(y.post, c(1,2), mean)
+  y.LB = apply(y.post, c(1,2), quantile, c(.025))
+  y.UB = apply(y.post, c(1,2), quantile, c(.975))
+  
+  data = if(is.null(data)) { mf_fixed }  else { data }
+  
+  ret = list(beta.pm, beta.UB, beta.LB, Yhat, mt_fixed, data, psi.pm)
+  names(ret) = c("beta.hat", "beta.UB", "beta.LB", "Yhat", "terms", "data", "psi.pm")
+  class(ret) = "fosr"
+  ret
+  
+}
+
+```
+
