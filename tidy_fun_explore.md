@@ -1,24 +1,11 @@
----
-title: "explore tidyfun"
-author: "Gaeun Kim"
-date: "1/4/2019"
-output: github_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(tidyfun)
-library(refund)
-library(ggplot2)
-library(reshape2)
-library(mgcv)
-source("./function/quadWeights.R")
-source("./function/fpca.tfd.R")
-```
+explore tidyfun
+================
+Gaeun Kim
+1/4/2019
 
 read in datasets
-```{r}
+
+``` r
 temp_tfd = load("data/temp_tfd.RData")
 handw_tfd= load("data/handw_tfd.RData")
 
@@ -33,7 +20,8 @@ dti = with(refund::DTI,
 ```
 
 fpca.tfd function examples
-```{r}
+
+``` r
 fit.cca = fpca.tfd(data = dti, col = rcst)
 
 fit.mu = data.frame(mu = fit.cca$mu,
@@ -43,17 +31,22 @@ fit.basis = data.frame(phi = fit.cca$efunctions, #the FPC basis functions.
 
 ## plot estimated mean function
 ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() 
+```
 
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-2-1.png)
+
+``` r
 ## plot the first two estimated basis functions
 fit.basis.m = melt(fit.basis, id = 'n')
 ggplot(subset(fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = n,
 y = value, group = variable, color = variable)) + geom_path()
-
 ```
+
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-2-2.png)
 
 putting cd4 dataset to fpca.tfd function
 
-```{r}
+``` r
 data(cd4)
 # CD4 cell counts for 366 subjects between months -18 and 42 since seroconversion. Each subject's observations are contained in a single row.
 # subject * weeks
@@ -75,8 +68,11 @@ fit.basis = data.frame(phi = fit.cd4$efunctions, #the FPC basis functions.
 ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() 
 ```
 
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-3-1.png)
+
 cd4 example on the refund page
-```{r}
+
+``` r
 Fit.MM = fpca.sc(cd4, var = TRUE, simul = TRUE)
 
 Fit.mu = data.frame(mu = Fit.MM$mu,
@@ -102,29 +98,37 @@ ggplot(EX.MM.m, aes(x = d, y = value, group = variable, color = variable, linety
   scale_color_manual(values = c(fitted = 1, ptwise.UB = 2,
                      ptwise.LB = 2, simul.UB = 3, simul.LB = 3)) +
   labs(x = 'Months since seroconversion', y = 'Total CD4 Cell Count')
+```
 
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-4-1.png)
+
+``` r
 ## plot estimated mean function
 ggplot(Fit.mu, aes(x = d, y = mu)) + geom_path() +
   labs(x = 'Months since seroconversion', y = 'Total CD4 Cell Count')
+```
 
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-4-2.png)
+
+``` r
 ## plot the first two estimated basis functions
 Fit.basis.m = melt(Fit.basis, id = 'd')
 ggplot(subset(Fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = d,
 y = value, group = variable, color = variable)) + geom_path()
-
 ```
-looks same as the tfd version!
 
-bayes_fosr:
-"Wrapper function that implements several approaches to Bayesian function on scalar regression."
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-4-3.png) looks same as the tfd version!
+
+bayes\_fosr: "Wrapper function that implements several approaches to Bayesian function on scalar regression."
 
 Exammple code from refund
 
-* I am getting errors regarding gibbs so I removed it from the sample for now.
-* error message: Error in tx[, ind.cur] %*% siginv : non-conformable arguments
+-   I am getting errors regarding gibbs so I removed it from the sample for now.
+-   error message: Error in tx\[, ind.cur\] %\*% siginv : non-conformable arguments
 
 I won't alter DTI like they did in refund because I want it to be same as dti, a tdf format of DTI.
-```{r}
+
+``` r
 ##### Cross-sectional real-data examples #####
 
 ## organize data
@@ -136,11 +140,33 @@ data(DTI)
 
 ## fit models
 default = bayes_fosr(cca ~ pasat, data = DTI)
+```
+
+    ## Beginning Algorithm 
+    ## .........
+
+``` r
 VB = bayes_fosr(cca ~ pasat, data = DTI, Kp = 4, Kt = 10)
+```
+
+    ## Beginning Algorithm 
+    ## .........
+
+``` r
 #Gibbs = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = #"Wishart", N.iter = 500, N.burn = 200)
 OLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "OLS")
-GLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "GLS")
+```
 
+    ## Using OLS to estimate model parameters
+
+``` r
+GLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "GLS")
+```
+
+    ## Using OLS to estimate residual covariance 
+    ## GLS
+
+``` r
 ## plot results
 models = c("default", "VB", "OLS", "GLS")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
@@ -149,28 +175,39 @@ slopes = sapply(models, function(u) get(u)$beta.hat[2,])
 plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
    geom_path() + theme_bw()
+```
 
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-5-1.png)
+
+``` r
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
    geom_path() + theme_bw()
+```
 
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-5-2.png)
+
+``` r
 #Gibbs - Error in tx[, ind.cur] %*% siginv : non-conformable arguments
 # removed Gibbs
 ```
 
-ols_cs:
-"Fitting function for function-on-scalar regression for cross-sectional data."
-```{r}
+ols\_cs: "Fitting function for function-on-scalar regression for cross-sectional data."
+
+``` r
 dti.ols = ols_cs(cca ~ pasat, data = DTI, Kt = 10)
 ```
 
-```{r}
+    ## Using OLS to estimate model parameters
+
+``` r
 library(splines)
 library(pbs)
 ```
 
 Below is a ols function for cross-sectional tfd datasets.
-```{r}
+
+``` r
 ols_cs_tfd = function(formula, col = NULL, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
   
   col = enquo(col) 
@@ -282,16 +319,19 @@ ols_cs_tfd = function(formula, col = NULL, data=NULL, Kt=5, basis = "bs", verbos
   ret
     
 }
-
 ```
 
 I will use the function `ols_cs_tfd` on dti but before, I will alter the dataset like DTI is altered above.
 
-```{r}
+``` r
 dti["pasat"] = DTI$pasat
 
 dti.ols.prac = ols_cs_tfd(cca ~ pasat, col = cca, data = dti, Kt = 10)
+```
 
+    ## Using OLS to estimate model parameters
+
+``` r
 ## plot results
 models = c("dti.ols", "dti.ols.prac")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
@@ -300,38 +340,81 @@ slopes = sapply(models, function(u) get(u)$beta.hat[2,])
 plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
    geom_path() + theme_bw()
+```
 
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-9-1.png)
+
+``` r
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
    geom_path() + theme_bw()
 ```
 
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-9-2.png)
+
 checking if the datasets(altered dti and original DTI) are the same:
-```{r}
+
+``` r
 all(dti %>%
       pull(cca) %>%
       as.data.frame() %>%
       spread(key = arg, value = value) %>%
       select(-id) %>%
       as.matrix() == DTI$cca, na.rm = TRUE)
+```
 
+    ## [1] TRUE
+
+``` r
 all(dti$pasat == DTI$pasat, na.rm = TRUE)
 ```
+
+    ## [1] TRUE
+
 **issue**
 
-the dataset altered inside ols_cs_tfd seems to be same as DTI but it's giving slightly different results as we can see in the graph above. 
+the dataset altered inside ols\_cs\_tfd seems to be same as DTI but it's giving slightly different results as we can see in the graph above.
 
-gibbs_cs_fpca:
-"Cross-sectional FoSR using a Gibbs sampler and FPCA"
-```{r}
+gibbs\_cs\_fpca: "Cross-sectional FoSR using a Gibbs sampler and FPCA"
+
+``` r
 #gibbs_cs_fpca(cca ~ pasat, data = DTI, Kt = 10)
 #gibbs_cs_fpca_prac(cca ~ pasat, data = DTI, Kt = 10)
 
 #keeps on running...
 ```
 
-```{r}
+``` r
 library(MASS)
-library(lme4)
+```
 
+    ## 
+    ## Attaching package: 'MASS'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     select
+
+``` r
+library(lme4)
+```
+
+    ## Loading required package: Matrix
+
+    ## 
+    ## Attaching package: 'Matrix'
+
+    ## The following object is masked from 'package:tidyr':
+    ## 
+    ##     expand
+
+    ## 
+    ## Attaching package: 'lme4'
+
+    ## The following object is masked from 'package:nlme':
+    ## 
+    ##     lmList
+
+``` r
 # gibbs_cs_fpca_prac = 
+```
