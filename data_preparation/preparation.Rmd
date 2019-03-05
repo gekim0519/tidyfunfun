@@ -2,7 +2,7 @@
 title: "data preparation"
 author: "Gaeun Kim"
 date: "2/27/2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +18,7 @@ handwrting data
 ```{r}
 # cursive handwriting coordinates
 #load data
-load("./data/handwrit.rda")
+load("../data/handwrit.rda")
 
 handwrit_time <- handwritTime %>% as.tibble() %>%
   janitor::clean_names()
@@ -84,7 +84,7 @@ monthlyPrecip A matrix of dimensions (12, 35) giving the average daily precipita
 
 geogindex Order the weather stations from East to West to North
 ```{r}
-load("./data/CanadianWeather.rda")
+load("../data/CanadianWeather.rda")
 
 cwtemp = CanadianWeather[[1]] %>% as.tibble() %>%
   t() %>% as.matrix() %>%
@@ -120,8 +120,8 @@ temp_tfd %>%
 
 saving datasets to r format
 ```{r}
-save(temp_tfd, file = "data/temp_tdf.RData")
-save(handw_tfd, file = "data/handw_tdf.RData")
+save(temp_tfd, file = "../data/temp_tdf.RData")
+save(handw_tfd, file = "../data/handw_tdf.RData")
 ```
 
 

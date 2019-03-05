@@ -6,8 +6,8 @@ Gaeun Kim
 read in datasets
 
 ``` r
-temp_tfd = load("data/temp_tfd.RData")
-handw_tfd= load("data/handw_tfd.RData")
+temp_tfd = load("../data/temp_tfd.RData")
+handw_tfd= load("../data/handw_tfd.RData")
 
 DTI = refund::DTI
 

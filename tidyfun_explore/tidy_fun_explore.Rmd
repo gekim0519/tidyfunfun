@@ -13,14 +13,14 @@ library(refund)
 library(ggplot2)
 library(reshape2)
 library(mgcv)
-source("./function/quadWeights.R")
-source("./function/fpca.tfd.R")
+source("../function/quadWeights.R")
+source("../function/fpca.tfd.R")
 ```
 
 read in datasets
 ```{r}
-temp_tfd = load("data/temp_tfd.RData")
-handw_tfd= load("data/handw_tfd.RData")
+temp_tfd = load("../data/temp_tfd.RData")
+handw_tfd= load("../data/handw_tfd.RData")
 
 DTI = refund::DTI
 
