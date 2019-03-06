@@ -261,3 +261,5 @@ temp.fit = temp_tfd$temp %>%
   as.matrix() %>%
   fpca.sc(Y =.)
 ```
+
+It gives us the same results!

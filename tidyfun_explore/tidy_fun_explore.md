@@ -3,7 +3,7 @@ explore tidyfun
 Gaeun Kim
 1/4/2019
 
-read in datasets
+First, let's read in our tf datasets.
 
 ``` r
 temp_tfd = load("../data/temp_tfd.RData")
@@ -208,117 +208,7 @@ library(pbs)
 Below is a ols function for cross-sectional tfd datasets.
 
 ``` r
-ols_cs_tfd = function(formula, col = NULL, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
-  
-  col = enquo(col) 
-  
-  tfd = data %>%
-    pull(!! col)
-  
-  stopifnot((!is.null(tfd))) #needed right?
-  
-  tfd = tfd %>% 
-  as.data.frame() %>%
-  spread(key = arg, value = value) %>%
-  select(-id) %>%
-  as.matrix()
-  
-  data[as.character(col)[2]]= tfd
-  
-  call <- match.call()
-  tf <- terms.formula(formula, specials = "re")
-  trmstrings <- attr(tf, "term.labels")
-  specials <- attr(tf, "specials")
-  where.re <-specials$re - 1
-  if (length(where.re) != 0) {
-    mf_fixed <- model.frame(tf[-where.re], data = data)
-    formula = tf[-where.re]
-    responsename <- attr(tf, "variables")[2][[1]]
-    ###
-    REs = list(NA, NA)
-    REs[[1]] = names(eval(parse(text=attr(tf[where.re], "term.labels")), envir=data)$data)
-    REs[[2]]=paste0("(1|",REs[[1]],")")
-    ###
-    formula2 <- paste(responsename, "~", REs[[1]], sep = "")
-    newfrml <- paste(responsename, "~", REs[[2]], sep = "")
-    newtrmstrings <- attr(tf[-where.re], "term.labels")
-    formula2 <- formula(paste(c(formula2, newtrmstrings), 
-                              collapse = "+"))
-    newfrml <- formula(paste(c(newfrml, newtrmstrings), collapse = "+"))
-    mf <- model.frame(formula2, data = data)
-    if (length(data) == 0) {
-      Z = lme4::mkReTrms(lme4::findbars(newfrml), fr = mf)$Zt
-    }
-    else {
-      Z = lme4::mkReTrms(lme4::findbars(newfrml), fr = data)$Zt
-    }
-  }
-  else {
-    mf_fixed <- model.frame(tf, data = data)
-  }
-  mt_fixed <- attr(mf_fixed, "terms")
-  
-  # get response (Y)
-  Y <- model.response(mf_fixed, "numeric")
-  
-  # x is a matrix of fixed effects
-  # automatically adds in intercept
-  X <- model.matrix(mt_fixed, mf_fixed, contrasts)
-  
-  ### model organization ###
-  D = dim(Y)[2]
-  I = dim(X)[1]
-  p = dim(X)[2]
-  
-  if(basis == "bs"){
-    Theta = bs(1:D, df = Kt, intercept=TRUE, degree=3)
-  } else if(basis == "pbs"){
-    Theta = pbs(1:D, df = Kt, intercept=TRUE, degree=3)
-  }
-
-  X.des = X
-  Y.vec = as.vector(t(Y)) 
-  X = kronecker(X.des, Theta)
-  n.coef = dim(X.des)[2]
-  
-  ## OLS model fitting and processing results
-  if(verbose) { cat("Using OLS to estimate model parameters \n") }
-  model.ols = lm(Y.vec ~ -1 + X)
-  Bx.ols = matrix(model.ols$coef, nrow = Kt, ncol = n.coef)  
-  beta.hat.ols = t(Bx.ols) %*% t(Theta)
-    
-  resid.mat = matrix(resid(model.ols), I, D, byrow = TRUE)
-    
-  ## Get Residual Structure using FPCA
-  ## note: this is commented out because, in simulations based on the headstart data, 
-  ## using FPCA lead to higher-than-nominal sizes for tests of nested models. 
-  ## using the raw covariance worked better. using FPCA is possible, but relies
-  ## on some case-specific choices.
-  # raw.resid.cov = cov(resid.mat)
-  # fpca.resid = fpca.sc(resid.mat, pve = .9995, nbasis = 20)
-  # resid.cov = with(fpca.resid, efunctions %*% diag(evalues) %*% t(efunctions))
-    
-  ## account for (possibly non-constant) ME nugget effect
-  # sm.diag = Theta %*% solve(crossprod(Theta)) %*% t(Theta) %*% (diag(raw.resid.cov) - diag(resid.cov))
-  # if(sum( sm.diag < 0 ) >0) { sm.diag[ sm.diag < 0] = min((diag(raw.resid.cov) - diag(resid.cov))[ sm.diag < 0])}
-  # diag(resid.cov) = diag(resid.cov) + sm.diag
-    
-  sigma = cov(resid.mat) * (I - 1) / (I - p)
-  
-  ## get confidence intervals
-  beta.UB = beta.LB = matrix(NA, p, D)
-  for(p.cur in 1:p){
-    ## confidence intervals for this model shouldn't be trusted
-  }
-  
-  Yhat = X.des %*% beta.hat.ols
-  
-  ret = list(beta.hat.ols, beta.UB, beta.LB, Yhat, mt_fixed, data, model.ols, sigma)
-  names(ret) = c("beta.hat", "beta.UB", "beta.LB", "Yhat", "terms", "data", "model.ols", "sigma")
-  class(ret) = "fosr"
-  ret
-    
-}
+source("../function/ols_cs_tfd.R")
 ```
 
 I will use the function `ols_cs_tfd` on dti but before, I will alter the dataset like DTI is altered above.
@@ -333,6 +223,13 @@ dti.ols.prac = ols_cs_tfd(cca ~ pasat, col = cca, data = dti, Kt = 10)
 
 ``` r
 ## plot results
+plot_fit_models = function(m1 = NULL, m2 = NULL, m3 = NULL, m4 = NULL, m5 = NULL){
+  input = list(m1, m2, m3, m4, m5) %>%
+    enquo()
+
+  as.character(input)
+}
+
 models = c("dti.ols", "dti.ols.prac")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
 slopes = sapply(models, function(u) get(u)$beta.hat[2,])
@@ -342,7 +239,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw()
 ```
 
-![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-9-1.png)
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 ``` r
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
@@ -350,7 +247,11 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw()
 ```
 
-![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-9-2.png)
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-8-2.png)
+
+**Issue**
+
+the dataset altered inside ols\_cs\_tfd seems to be same as DTI but it's giving slightly different results as we can see in the graph above.
 
 checking if the datasets(altered dti and original DTI) are the same:
 
@@ -371,9 +272,138 @@ all(dti$pasat == DTI$pasat, na.rm = TRUE)
 
     ## [1] TRUE
 
-**issue**
+So the cca from dti altered to a matrix in the function is the same as cca in DTI as well as pasat in dti and in DTI. They also have equal dim size.
 
-the dataset altered inside ols\_cs\_tfd seems to be same as DTI but it's giving slightly different results as we can see in the graph above.
+``` r
+plot_fit_models = function(models) {
+  
+  models = models
+  intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
+  slopes = sapply(models, function(u) get(u)$beta.hat[2,])
+
+  plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
+  p1 = ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw() + ggtitle("intercepts")
+
+  plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
+  p2 = ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw() + ggtitle("slopes")
+  
+ gridExtra::grid.arrange(p1,p2)
+}
+```
+
+Just to make sure if cca is the cause of the difference I will put DTI's cca inside dti.
+
+``` r
+dti_same = dti
+dti_same["cca"] = DTI["cca"]
+
+dti_same_ols = ols_cs(cca ~ pasat, data = dti_same, Kt = 10)
+```
+
+    ## Using OLS to estimate model parameters
+
+``` r
+models = c("dti.ols", "dti_same_ols")
+plot_fit_models(models)
+```
+
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-11-1.png)
+
+So, cca is the cause of the difference.
+
+Let's see what we get if we change tdf dti to the original version and fit to cs.ols function.
+
+``` r
+dti_testing = dti
+dti_testing["cca"] = dti$cca %>% 
+  as.data.frame() %>%
+  spread(key = arg, value = value) %>%
+  select(-id) %>%
+  as.matrix() 
+
+dti.testing.ols = ols_cs(cca ~ pasat, data = dti_testing, Kt = 10)
+```
+
+    ## Using OLS to estimate model parameters
+
+``` r
+dti_cca = dti_testing$cca %>% as.data.frame()
+DTI_cca = DTI$cca %>% as.data.frame()
+rownames(dti_cca) = rownames(DTI_cca)
+colnames(dti_cca) = colnames(DTI_cca)
+
+dti_cca %>% is.na() %>% sum() #0 
+```
+
+    ## [1] 0
+
+``` r
+DTI_cca %>% is.na() %>% sum() #36
+```
+
+    ## [1] 36
+
+So I see that while both cca columns have the sme values for non-missing data, cca at dti have no missing values while DTI has 36 missings.
+
+-   Question: does tfd function remove missings?
+
+``` r
+which(is.na(DTI_cca), arr.ind=TRUE)
+```
+
+    ##        row col
+    ## 2083_4 321  45
+    ## 2083_4 321  46
+    ## 2083_4 321  49
+    ## 2083_4 321  50
+    ## 2083_4 321  56
+    ## 2083_4 321  57
+    ## 2083_4 321  58
+    ## 2083_4 321  59
+    ## 2083_4 321  60
+    ## 2083_4 321  61
+    ## 2083_4 321  62
+    ## 2083_4 321  63
+    ## 2083_4 321  64
+    ## 2017_2 126  65
+    ## 2083_4 321  65
+    ## 2017_2 126  66
+    ## 2017_6 130  66
+    ## 2017_7 131  66
+    ## 2083_4 321  66
+    ## 2017_1 125  67
+    ## 2017_2 126  67
+    ## 2017_6 130  67
+    ## 2017_7 131  67
+    ## 2083_4 321  67
+    ## 2017_1 125  68
+    ## 2017_2 126  68
+    ## 2017_6 130  68
+    ## 2083_2 319  68
+    ## 2083_4 321  68
+    ## 2083_2 319  69
+    ## 2083_4 321  69
+    ## 2083_2 319  70
+    ## 2083_2 319  71
+    ## 2083_4 321  71
+    ## 2083_2 319  72
+    ## 2083_4 321  72
+
+``` r
+dti_cca[321, 45]
+```
+
+    ## [1] 0.2825337
+
+``` r
+DTI_cca[321, 45]
+```
+
+    ## [1] NaN
+
+Looking at one of the missings in DTI, I think the tfd function impute/approximate the missings.
 
 gibbs\_cs\_fpca: "Cross-sectional FoSR using a Gibbs sampler and FPCA"
 
@@ -382,39 +412,4 @@ gibbs\_cs\_fpca: "Cross-sectional FoSR using a Gibbs sampler and FPCA"
 #gibbs_cs_fpca_prac(cca ~ pasat, data = DTI, Kt = 10)
 
 #keeps on running...
-```
-
-``` r
-library(MASS)
-```
-
-    ## 
-    ## Attaching package: 'MASS'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     select
-
-``` r
-library(lme4)
-```
-
-    ## Loading required package: Matrix
-
-    ## 
-    ## Attaching package: 'Matrix'
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     expand
-
-    ## 
-    ## Attaching package: 'lme4'
-
-    ## The following object is masked from 'package:nlme':
-    ## 
-    ##     lmList
-
-``` r
-# gibbs_cs_fpca_prac = 
 ```
