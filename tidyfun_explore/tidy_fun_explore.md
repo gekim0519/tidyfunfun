@@ -200,18 +200,13 @@ dti.ols = ols_cs(cca ~ pasat, data = DTI, Kt = 10)
 
     ## Using OLS to estimate model parameters
 
-``` r
-library(splines)
-library(pbs)
-```
-
 Below is a ols function for cross-sectional tfd datasets.
 
 ``` r
 source("../function/ols_cs_tfd.R")
 ```
 
-I will use the function `ols_cs_tfd` on dti but before, I will alter the dataset like DTI is altered above.
+I will put in our tf dataset that we made in the beginning, dti.
 
 ``` r
 dti["pasat"] = DTI$pasat
@@ -222,14 +217,6 @@ dti.ols.prac = ols_cs_tfd(cca ~ pasat, col = cca, data = dti, Kt = 10)
     ## Using OLS to estimate model parameters
 
 ``` r
-## plot results
-plot_fit_models = function(m1 = NULL, m2 = NULL, m3 = NULL, m4 = NULL, m5 = NULL){
-  input = list(m1, m2, m3, m4, m5) %>%
-    enquo()
-
-  as.character(input)
-}
-
 models = c("dti.ols", "dti.ols.prac")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
 slopes = sapply(models, function(u) get(u)$beta.hat[2,])
@@ -239,7 +226,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw()
 ```
 
-![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-8-1.png)
+![](tidy_fun_explore_files/figure-markdown_github/fit%20tf%20ols-1.png)
 
 ``` r
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
@@ -247,7 +234,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw()
 ```
 
-![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-8-2.png)
+![](tidy_fun_explore_files/figure-markdown_github/fit%20tf%20ols-2.png)
 
 **Issue**
 
@@ -309,7 +296,7 @@ models = c("dti.ols", "dti_same_ols")
 plot_fit_models(models)
 ```
 
-![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-11-1.png)
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 So, cca is the cause of the difference.
 

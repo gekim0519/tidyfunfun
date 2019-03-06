@@ -1,3 +1,6 @@
+library(splines)
+library(pbs)
+
 ols_cs_tfd = function(formula, col = NULL, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
   
   col = enquo(col) 

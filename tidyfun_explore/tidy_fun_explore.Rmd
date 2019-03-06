@@ -124,7 +124,7 @@ Exammple code from refund
 * error message: Error in tx[, ind.cur] %*% siginv : non-conformable arguments
 
 I won't alter DTI like they did in refund because I want it to be same as dti, a tdf format of DTI.
-```{r}
+```{r }
 ##### Cross-sectional real-data examples #####
 
 ## organize data
@@ -164,30 +164,17 @@ ols_cs:
 dti.ols = ols_cs(cca ~ pasat, data = DTI, Kt = 10)
 ```
 
-```{r}
-library(splines)
-library(pbs)
-```
-
 Below is a ols function for cross-sectional tfd datasets.
 ```{r}
 source("../function/ols_cs_tfd.R")
 ```
 
-I will use the function `ols_cs_tfd` on dti but before, I will alter the dataset like DTI is altered above.
+I will put in our tf dataset that we made in the beginning, dti.
 
-```{r}
+```{r fit tf ols}
 dti["pasat"] = DTI$pasat
 
 dti.ols.prac = ols_cs_tfd(cca ~ pasat, col = cca, data = dti, Kt = 10)
-
-## plot results
-plot_fit_models = function(m1 = NULL, m2 = NULL, m3 = NULL, m4 = NULL, m5 = NULL){
-  input = list(m1, m2, m3, m4, m5) %>%
-    enquo()
-
-  as.character(input)
-}
 
 models = c("dti.ols", "dti.ols.prac")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
