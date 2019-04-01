@@ -1,14 +1,17 @@
 library(splines)
 library(pbs)
 
-ols_cs_tfd = function(formula, col = NULL, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
+ols_cs_tfd_ts = function(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
   
-  col = enquo(col) 
+  # depent y is tf 
+  col = attr(terms(formula(formula)),"variables")
+  col = col[[2]]
+  col = enquo(col)
   
   tfd = data %>%
     pull(!! col)
   
-  stopifnot((!is.null(tfd))) #needed right?
+  stopifnot((!is.null(tfd))) 
   
   tfd = tfd %>% 
     as.data.frame() %>%
