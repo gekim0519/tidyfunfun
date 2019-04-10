@@ -133,8 +133,10 @@ data(DTI)
 ## fit models
 default = bayes_fosr(cca ~ pasat, data = DTI)
 VB = bayes_fosr(cca ~ pasat, data = DTI, Kp = 4, Kt = 10)
-#download refund from devtools
-Gibbs = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "Wishart", N.iter = 500, N.burn = 200)
+# to run Gibbs download refund from devtools
+Gibbs = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "FPCA", N.iter = 500, N.burn = 200)
+## Gibbs Wishart
+Gibbs_wish = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "Wishart", N.iter = 500, N.burn = 200)
 OLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "OLS")
 GLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "GLS")
 
@@ -207,17 +209,38 @@ So I see that while both cca columns have the sme values for non-missing data, c
 gibbs_cs_fpca:
 "Cross-sectional FoSR using a Gibbs sampler and FPCA"
 ```{r}
-#gibbs_cs_fpca(cca ~ pasat, data = DTI, Kt = 10)
-#gibbs_cs_fpca_prac(cca ~ pasat, data = DTI, Kt = 10)
+Gibbs_bayes = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "FPCA", N.iter = 500, N.burn = 200)
 
-#keeps on running...
+gibbs = gibbs_cs_fpca(cca ~ pasat, data = DTI, Kt = 10, N.iter = 500, N.burn = 200)
 ```
 
 ```{r eval = FALSE, echo = FALSE}
-library(MASS)
-library(lme4)
-
-# gibbs_cs_fpca_prac = 
+source("../function/gibbs_cs_fpca_tfd.R")
 ```
 
+```{r}
+gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+```
+```{r eval = FALSE, echo = FALSE}
+source("../function/gibbs_cs_wish_tfd.R")
+```
 
+```{r}
+gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+```
+
+```{r}
+models = c("Gibbs_bayes", "gibbs", "gibbs_dti", "gibbs_dti_wish")
+intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
+slopes = sapply(models, function(u) get(u)$beta.hat[2,])
+
+plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
+ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw()
+
+plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
+ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw()
+```
+
+So I've graphed intercepts and slopes from four functions using Gibbs sampler. They all seems to differ slightly. Strangely, Gibbs_bayes and gibbs were fitted using the same `gibbs_cs_fpca` function but still gives different results. (Why?)

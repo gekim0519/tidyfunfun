@@ -1,7 +1,7 @@
 library(splines)
 library(pbs)
 
-ols_cs_tfd_ts = function(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
+ols_cs_tfd = function(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
   
   # depent y is tf 
   col = attr(terms(formula(formula)),"variables")
