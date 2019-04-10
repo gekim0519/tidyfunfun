@@ -1,3 +1,9 @@
+#' Used libraries
+#' @importFrom dplyr enquo %>%
+#' @importFrom splines bs
+#' @importFrom MASS mvrnorm
+#' @importFrom stats rWishart
+
 Xt_siginv_X = function(tx, siginv, y = NULL){
   
   D = dim(siginv)[1]

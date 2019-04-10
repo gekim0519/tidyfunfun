@@ -1,9 +1,11 @@
-library(splines)
-library(pbs)
+# Used libraries
+# dplyr - enquo %>%
+# splines - bs
+# pbs - pbs
 
 ols_cs_tfd = function(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
   
-  # depent y is tf 
+  # dependent y is tf 
   col = attr(terms(formula(formula)),"variables")
   col = col[[2]]
   col = enquo(col)
@@ -67,9 +69,9 @@ ols_cs_tfd = function(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE){
   p = dim(X)[2]
   
   if(basis == "bs"){
-    Theta = bs(1:D, df = Kt, intercept=TRUE, degree=3)
+    Theta = splines::bs(1:D, df = Kt, intercept=TRUE, degree=3)
   } else if(basis == "pbs"){
-    Theta = pbs(1:D, df = Kt, intercept=TRUE, degree=3)
+    Theta = pbs::pbs(1:D, df = Kt, intercept=TRUE, degree=3)
   }
   
   X.des = X

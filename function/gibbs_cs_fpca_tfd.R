@@ -1,3 +1,8 @@
+# Used libraries
+# splines - bs
+# MASS - mvrnorm
+# lme4 - mkReTrms findbars
+
 gibbs_cs_fpca_tfd = function(formula, Kt=5, Kp=2, data=NULL, verbose = TRUE, N.iter = 5000, N.burn = 1000, SEED = NULL, 
          sig2.me = .01, alpha = .1, Aw = NULL, Bw = NULL, Apsi = NULL, Bpsi = NULL){
   

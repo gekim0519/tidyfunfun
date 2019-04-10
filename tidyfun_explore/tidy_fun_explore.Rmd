@@ -12,7 +12,6 @@ library(tidyfun)
 library(refund)
 library(ggplot2)
 library(reshape2)
-library(mgcv)
 source("../function/quadWeights.R")
 source("../function/fpca.tfd.R")
 ```

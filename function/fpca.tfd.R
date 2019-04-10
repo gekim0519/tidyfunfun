@@ -1,6 +1,9 @@
-library(refund)
-library(reshape2)
-library(mgcv)
+# Used libraries
+# dplyr - enquo %>%
+# gamm4 - gamm4
+# mgcv - gam
+# Matrix - nearPD
+# MASS - mvrnorm
 
 fpca.tfd <- function(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, random.int = FALSE,
                      nbasis = 10, pve = 0.99, npc = NULL, var = FALSE, simul = FALSE, sim.alpha = 0.95,
@@ -12,8 +15,7 @@ fpca.tfd <- function(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, ran
     pull(!! col)
   
   stopifnot((!is.null(tfd)))
-  # stop if not: Y is not null and ydata is null or y is null and ydata is not null
-  # basically they both shouldnt be null
+  # stop if not: col is not null
   
   # change the tfd matrix into Y matrix
   Y = tfd %>% 
@@ -37,9 +39,9 @@ fpca.tfd <- function(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, ran
   if (center) {
     if (random.int) {
       ri_data <- data.frame(y = as.vector(Y), d.vec = d.vec, id = factor(id))
-      gam0 = gamm4(y ~ s(d.vec, k = nbasis), random = ~(1 | id), data = ri_data)$gam
+      gam0 = gamm4::gamm4(y ~ s(d.vec, k = nbasis), random = ~(1 | id), data = ri_data)$gam
       rm(ri_data)
-    } else gam0 = gam(as.vector(Y) ~ s(d.vec, k = nbasis))
+    } else gam0 = mgcv::gam(as.vector(Y) ~ s(d.vec, k = nbasis))
     mu = predict(gam0, newdata = data.frame(d.vec = argvals))
     Y.tilde = Y - matrix(mu, I, D, byrow = TRUE)
   } else {
@@ -63,7 +65,7 @@ fpca.tfd <- function(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, ran
     if (!useSymm) {
       row.vec = rep(argvals, each = D)
       col.vec = rep(argvals, D)
-      npc.0 = matrix(predict(gam(as.vector(G.0) ~ te(row.vec, col.vec, k = nbasis),
+      npc.0 = matrix(predict(mgcv::gam(as.vector(G.0) ~ te(row.vec, col.vec, k = nbasis),
                                  weights = as.vector(cov.count)), newdata = data.frame(row.vec = row.vec,
                                                                                        col.vec = col.vec)), D, D)
       npc.0 = (npc.0 + t(npc.0))/2
@@ -77,7 +79,7 @@ fpca.tfd <- function(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, ran
       vG.0 <- as.vector(G.0)[use]
       row.vec <- rep(argvals, each = D)[use]
       col.vec <- rep(argvals, times = D)[use]
-      mCov <- gam(vG.0 ~ te(row.vec, col.vec, k = nbasis), weights = usecov.count)
+      mCov <- mgcv::gam(vG.0 ~ te(row.vec, col.vec, k = nbasis), weights = usecov.count)
       npc.0 <- matrix(NA, D, D)
       spred <- rep(argvals, each = D)[upper.tri(npc.0, diag = TRUE)]
       tpred <- rep(argvals, times = D)[upper.tri(npc.0, diag = TRUE)]
@@ -104,7 +106,7 @@ fpca.tfd <- function(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, ran
     }
     row.vec.pred = rep(argvals, each = D)
     col.vec.pred = rep(argvals, D)
-    npc.0 = matrix(predict(gam(G.0.vec ~ te(row.vec, col.vec, k = nbasis)), newdata = data.frame(row.vec = row.vec.pred,
+    npc.0 = matrix(predict(mgcv::gam(G.0.vec ~ te(row.vec, col.vec, k = nbasis)), newdata = data.frame(row.vec = row.vec.pred,
                                                                                                  col.vec = col.vec.pred)), D, D)
     npc.0 = (npc.0 + t(npc.0))/2
     G.0 = ifelse(cov.count == 0, NA, cov.sum/cov.count)
@@ -164,7 +166,7 @@ fpca.tfd <- function(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, ran
       VarMats[[i.subj]] = sigma2 * Z %*% ZtZ_sD.inv %*% t(Z)
       diag.var[i.subj, ] = diag(VarMats[[i.subj]])
       if (simul & sigma2 != 0) {
-        norm.samp = mvrnorm(2500, mu = rep(0, D), Sigma = VarMats[[i.subj]])/matrix(sqrt(diag(VarMats[[i.subj]])),
+        norm.samp = MASS::mvrnorm(2500, mu = rep(0, D), Sigma = VarMats[[i.subj]])/matrix(sqrt(diag(VarMats[[i.subj]])),
                                                                                     nrow = 2500, ncol = D, byrow = TRUE)
         crit.val[i.subj] = quantile(apply(abs(norm.samp), 1, max), sim.alpha)
       }

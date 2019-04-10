@@ -1,0 +1,143 @@
+---
+title: "Function Documentation"
+author: "Sara Kim"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidyfun)
+library(refund)
+```
+
+Reading in DTI (`refund::DTI`) and dti, a data frame derived from DTI with two columns of functional data (cca, rcst) in tfd class instead of matrices.
+```{r}
+temp_tfd = load("./data/temp_tfd.RData")
+handw_tfd= load("./data/handw_tfd.RData")
+
+DTI = refund::DTI
+
+dti = with(refund::DTI, 
+  data.frame(id = ID, sex = sex, 
+    case = factor(ifelse(case, "MS", "control")))) %>% as.tbl %>% 
+        mutate(cca = tfd(DTI$cca, seq(0,1, l = 93), signif = 2) %>%
+                     tfd(arg = seq(0,1,l = 93)),
+               rcst = tfd(DTI$rcst, seq(0, 1, l = 55), signif = 3))
+```
+
+## fpca.tfd()
+
+**Functional principal components analysis by smoothed covariance**
+
+### Description
+
+(Reference: refund::fpca.sc() https://github.com/refunders/refund/blob/master/R/fpca.sc.R)
+
+Functional Principal Components Analysis By Smoothed Covariance
+Decomposes functional observations using functional principal components analysis. A mixed model framework is used to estimate scores and obtain variance estimates.
+
+### Usage
+
+fpca.tfd(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, random.int = FALSE, nbasis = 10, pve = 0.99, npc = NULL, var = FALSE, simul = FALSE, sim.alpha = 0.95, useSymm = FALSE, makePD = FALSE, center = TRUE, cov.est.method = 2, integration ="trapezoidal")
+
+## Arguments
+
+@param data: the user must supply data frame containing a tfd class column. 
+
+@param col: a class tfd_irreg variable in the specified data frame.
+
+*BELOW IN PROGRESS*
+
+**arg must be changed since the current function does not take Y**
+
+**I think Y.pred is not needed or we can also add Y as an arg and take tfd matrix as an input**
+
+@param Y.pred: if desired, a matrix of functions to be approximated using the FPC decomposition.
+argvals: the argument values of the function evaluations in Y, defaults to a equidistant grid from 0 to 1.
+random.int	
+If TRUE, the mean is estimated by gamm4 with random intercepts. If FALSE (the default), the mean is estimated by gam treating all the data as independent.
+nbasis	
+number of B-spline basis functions used for estimation of the mean function and bivariate smoothing of the covariance surface.
+pve	
+proportion of variance explained: used to choose the number of principal components.
+npc	
+prespecified value for the number of principal components (if given, this overrides pve).
+var	
+TRUE or FALSE indicating whether model-based estimates for the variance of FPCA expansions should be computed.
+simul	
+logical: should critical values be estimated for simultaneous confidence intervals?
+sim.alpha	
+1 - coverage probability of the simultaneous intervals.
+useSymm	
+logical, indicating whether to smooth only the upper triangular part of the naive covariance (when cov.est.method==2). This can save computation time for large data sets, and allows for covariance surfaces that are very peaked on the diagonal.
+makePD	
+logical: should positive definiteness be enforced for the covariance surface estimate?
+center	
+logical: should an estimated mean function be subtracted from Y? Set to FALSE if you have already demeaned the data using your favorite mean function estimate.
+cov.est.method	
+covariance estimation method. If set to 1, a one-step method that applies a bivariate smooth to the y(s_1)y(s_2) values. This can be very slow. If set to 2 (the default), a two-step method that obtains a naive covariance estimate which is then smoothed.
+integration	
+quadrature method for numerical integration; only 'trapezoidal' is currently supported.
+
+### Examples
+```{r}
+library(ggplot2)
+library(reshape2)
+data(cd4)
+```
+
+```{r}
+cd4_tfd = cd4 %>%
+  tfd()
+cd4_df = data_frame(cd4_tfd)
+
+head(cd4_df)
+dim(cd4_df)
+```
+```{r}
+source("./function/quadWeights.R")
+source("./function/fpca.tfd.R")
+```
+
+```{r}
+fit.cd4 = fpca.tfd(data = cd4_df, col = cd4_tfd)
+
+fit.mu = data.frame(mu = fit.cd4$mu,
+                    n = 1:ncol(fit.cd4$Yhat))
+fit.basis = data.frame(phi = fit.cd4$efunctions, #the FPC basis functions.
+                       n = 1:ncol(fit.cd4$Yhat))
+
+## plot estimated mean function
+ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() 
+
+## plot the first two estimated basis functions
+fit.basis.m = melt(fit.basis, id = 'n')
+ggplot(subset(fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = n,
+y = value, group = variable, color = variable)) + geom_path()
+```
+
+
+
+## ols_cs_tfd()
+
+### Description
+
+Fitting function for function-on-scalar regression for cross-sectional data. This function estimates model parameters using GLS: first, an OLS estimate of spline coefficients is estimated; second, the residual covariance is estimated using an FPC decomposition of the OLS residual curves; finally, a GLS estimate of spline coefficients is estimated. Although this is in the 'BayesFoSR' package, there is nothing Bayesian about this FoSR.
+
+### Usage
+
+ols_cs_tfd(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE)
+
+### Arguments
+
+formula	a formula indicating the structure of the proposed model. Takes in tfd class variable as the response.
+
+data	an optional data frame, list or environment containing the variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment from which the function is called.
+
+Kt	number of spline basis functions used to estimate coefficient functions
+
+basis	basis type; options are "bs" for b-splines and "pbs" for periodic b-splines
+
+verbose	logical defaulting to TRUE – should updates on progress be printed?
+
