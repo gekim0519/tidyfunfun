@@ -214,14 +214,15 @@ Gibbs_bayes = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs",
 gibbs = gibbs_cs_fpca(cca ~ pasat, data = DTI, Kt = 10, N.iter = 500, N.burn = 200)
 ```
 
-```{r eval = FALSE, echo = FALSE}
+```{r}
 source("../function/gibbs_cs_fpca_tfd.R")
 ```
 
 ```{r}
 gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
 ```
-```{r eval = FALSE, echo = FALSE}
+
+```{r}
 source("../function/gibbs_cs_wish_tfd.R")
 ```
 

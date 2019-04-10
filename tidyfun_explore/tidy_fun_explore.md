@@ -1,6 +1,6 @@
 explore tidyfun
 ================
-Gaeun Kim
+Sara Kim
 1/4/2019
 
 First, let's read in our tf datasets.
@@ -119,12 +119,7 @@ y = value, group = variable, color = variable)) + geom_path()
 
 ![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-4-3.png) looks same as the tfd version!
 
-bayes\_fosr: "Wrapper function that implements several approaches to Bayesian function on scalar regression."
-
-Exammple code from refund
-
--   I am getting errors regarding gibbs so I removed it from the sample for now.
--   error message: Error in tx\[, ind.cur\] %\*% siginv : non-conformable arguments
+Sample Code from Refund bayes\_fosr: "Wrapper function that implements several approaches to Bayesian function on scalar regression."
 
 I won't alter DTI like they did in refund because I want it to be same as dti, a tdf format of DTI.
 
@@ -153,7 +148,22 @@ VB = bayes_fosr(cca ~ pasat, data = DTI, Kp = 4, Kt = 10)
     ## .........
 
 ``` r
-#Gibbs = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = #"Wishart", N.iter = 500, N.burn = 200)
+# to run Gibbs download refund from devtools
+Gibbs = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "FPCA", N.iter = 500, N.burn = 200)
+```
+
+    ## Beginning Sampler 
+    ## ..........
+
+``` r
+## Gibbs Wishart
+Gibbs_wish = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "Wishart", N.iter = 500, N.burn = 200)
+```
+
+    ## Beginning Sampler 
+    ## ..........
+
+``` r
 OLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "OLS")
 ```
 
@@ -168,7 +178,7 @@ GLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "GLS")
 
 ``` r
 ## plot results
-models = c("default", "VB", "OLS", "GLS")
+models = c("default", "VB", "Gibbs", "OLS", "GLS")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
 slopes = sapply(models, function(u) get(u)$beta.hat[2,])
 
@@ -186,11 +196,6 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
 ```
 
 ![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-5-2.png)
-
-``` r
-#Gibbs - Error in tx[, ind.cur] %*% siginv : non-conformable arguments
-# removed Gibbs
-```
 
 ols\_cs: "Fitting function for function-on-scalar regression for cross-sectional data."
 
@@ -211,7 +216,7 @@ I will put in our tf dataset that we made in the beginning, dti.
 ``` r
 dti["pasat"] = DTI$pasat
 
-dti.ols.prac = ols_cs_tfd(cca ~ pasat, col = cca, data = dti, Kt = 10)
+dti.ols.prac = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
 ```
 
     ## Using OLS to estimate model parameters
@@ -236,71 +241,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
 
 ![](tidy_fun_explore_files/figure-markdown_github/fit%20tf%20ols-2.png)
 
-**Issue**
-
-the dataset altered inside ols\_cs\_tfd seems to be same as DTI but it's giving slightly different results as we can see in the graph above.
-
-checking if the datasets(altered dti and original DTI) are the same:
-
-``` r
-all(dti %>%
-      pull(cca) %>%
-      as.data.frame() %>%
-      spread(key = arg, value = value) %>%
-      select(-id) %>%
-      as.matrix() == DTI$cca, na.rm = TRUE)
-```
-
-    ## [1] TRUE
-
-``` r
-all(dti$pasat == DTI$pasat, na.rm = TRUE)
-```
-
-    ## [1] TRUE
-
-So the cca from dti altered to a matrix in the function is the same as cca in DTI as well as pasat in dti and in DTI. They also have equal dim size.
-
-``` r
-plot_fit_models = function(models) {
-  
-  models = models
-  intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
-  slopes = sapply(models, function(u) get(u)$beta.hat[2,])
-
-  plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
-  p1 = ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
-   geom_path() + theme_bw() + ggtitle("intercepts")
-
-  plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
-  p2 = ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
-   geom_path() + theme_bw() + ggtitle("slopes")
-  
- gridExtra::grid.arrange(p1,p2)
-}
-```
-
-Just to make sure if cca is the cause of the difference I will put DTI's cca inside dti.
-
-``` r
-dti_same = dti
-dti_same["cca"] = DTI["cca"]
-
-dti_same_ols = ols_cs(cca ~ pasat, data = dti_same, Kt = 10)
-```
-
-    ## Using OLS to estimate model parameters
-
-``` r
-models = c("dti.ols", "dti_same_ols")
-plot_fit_models(models)
-```
-
-![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-9-1.png)
-
-So, cca is the cause of the difference.
-
-Let's see what we get if we change tdf dti to the original version and fit to cs.ols function.
+The dataset altered inside ols\_cs\_tfd seems to be same as DTI except the null values inside DTI have been imputed in the tfd. I belive because of that It's giving slightly different results as we can see in the graph above.
 
 ``` r
 dti_testing = dti
@@ -310,12 +251,6 @@ dti_testing["cca"] = dti$cca %>%
   select(-id) %>%
   as.matrix() 
 
-dti.testing.ols = ols_cs(cca ~ pasat, data = dti_testing, Kt = 10)
-```
-
-    ## Using OLS to estimate model parameters
-
-``` r
 dti_cca = dti_testing$cca %>% as.data.frame()
 DTI_cca = DTI$cca %>% as.data.frame()
 rownames(dti_cca) = rownames(DTI_cca)
@@ -334,69 +269,62 @@ DTI_cca %>% is.na() %>% sum() #36
 
 So I see that while both cca columns have the sme values for non-missing data, cca at dti have no missing values while DTI has 36 missings.
 
--   Question: does tfd function remove missings?
-
-``` r
-which(is.na(DTI_cca), arr.ind=TRUE)
-```
-
-    ##        row col
-    ## 2083_4 321  45
-    ## 2083_4 321  46
-    ## 2083_4 321  49
-    ## 2083_4 321  50
-    ## 2083_4 321  56
-    ## 2083_4 321  57
-    ## 2083_4 321  58
-    ## 2083_4 321  59
-    ## 2083_4 321  60
-    ## 2083_4 321  61
-    ## 2083_4 321  62
-    ## 2083_4 321  63
-    ## 2083_4 321  64
-    ## 2017_2 126  65
-    ## 2083_4 321  65
-    ## 2017_2 126  66
-    ## 2017_6 130  66
-    ## 2017_7 131  66
-    ## 2083_4 321  66
-    ## 2017_1 125  67
-    ## 2017_2 126  67
-    ## 2017_6 130  67
-    ## 2017_7 131  67
-    ## 2083_4 321  67
-    ## 2017_1 125  68
-    ## 2017_2 126  68
-    ## 2017_6 130  68
-    ## 2083_2 319  68
-    ## 2083_4 321  68
-    ## 2083_2 319  69
-    ## 2083_4 321  69
-    ## 2083_2 319  70
-    ## 2083_2 319  71
-    ## 2083_4 321  71
-    ## 2083_2 319  72
-    ## 2083_4 321  72
-
-``` r
-dti_cca[321, 45]
-```
-
-    ## [1] 0.2825337
-
-``` r
-DTI_cca[321, 45]
-```
-
-    ## [1] NaN
-
-Looking at one of the missings in DTI, I think the tfd function impute/approximate the missings.
-
 gibbs\_cs\_fpca: "Cross-sectional FoSR using a Gibbs sampler and FPCA"
 
 ``` r
-#gibbs_cs_fpca(cca ~ pasat, data = DTI, Kt = 10)
-#gibbs_cs_fpca_prac(cca ~ pasat, data = DTI, Kt = 10)
-
-#keeps on running...
+Gibbs_bayes = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "FPCA", N.iter = 500, N.burn = 200)
 ```
+
+    ## Beginning Sampler 
+    ## ..........
+
+``` r
+gibbs = gibbs_cs_fpca(cca ~ pasat, data = DTI, Kt = 10, N.iter = 500, N.burn = 200)
+```
+
+    ## Beginning Sampler 
+    ## ..........
+
+``` r
+source("../function/gibbs_cs_fpca_tfd.R")
+```
+
+``` r
+gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+```
+
+    ## Beginning Sampler 
+    ## ..........
+
+``` r
+source("../function/gibbs_cs_wish_tfd.R")
+```
+
+``` r
+gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+```
+
+    ## Beginning Sampler 
+    ## ..........
+
+``` r
+models = c("Gibbs_bayes", "gibbs", "gibbs_dti", "gibbs_dti_wish")
+intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
+slopes = sapply(models, function(u) get(u)$beta.hat[2,])
+
+plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
+ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw()
+```
+
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-13-1.png)
+
+``` r
+plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
+ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw()
+```
+
+![](tidy_fun_explore_files/figure-markdown_github/unnamed-chunk-13-2.png)
+
+So I've graphed intercepts and slopes from four functions using Gibbs sampler. They all seems to differ slightly. Strangely, Gibbs\_bayes and gibbs were fitted using the same `gibbs_cs_fpca` function but still gives different results. (Why?)
