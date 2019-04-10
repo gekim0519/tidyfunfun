@@ -1,24 +1,15 @@
----
-title: "Function Documentation"
-author: "Sara Kim"
-output: github_document
----
+Function Documentation
+================
+Sara Kim
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(tidyfun)
-library(refund)
-```
-
-## fpca.tfd()
+fpca.tfd()
+----------
 
 **Functional principal components analysis by smoothed covariance**
 
-
 ### Description
 
-(Reference: refund::fpca.sc() https://github.com/refunders/refund/blob/master/R/fpca.sc.R)
+(Reference: refund::fpca.sc() <https://github.com/refunders/refund/blob/master/R/fpca.sc.R>)
 
 Takes in a data frame containing a tfd class column (specified in the argument col input) and transforms it into a matrix class.
 
@@ -30,9 +21,9 @@ fpca.tfd(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, random.int = FA
 
 ### Arguments
 
-@param data: the user must supply data frame containing a tfd class column. 
+@param data: the user must supply data frame containing a tfd class column.
 
-@param col: a class tfd_irreg variable in the specified data frame.
+@param col: a class tfd\_irreg variable in the specified data frame.
 
 *BELOW IN PROGRESS*
 
@@ -40,43 +31,36 @@ fpca.tfd(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, random.int = FA
 
 **I think Y.pred is not needed or we can also add Y as an arg and take tfd matrix as an input**
 
-@param Y.pred: if desired, a matrix of functions to be approximated using the FPC decomposition.
-argvals: the argument values of the function evaluations in Y, defaults to a equidistant grid from 0 to 1.
-random.int	
-If TRUE, the mean is estimated by gamm4 with random intercepts. If FALSE (the default), the mean is estimated by gam treating all the data as independent.
-nbasis	
-number of B-spline basis functions used for estimation of the mean function and bivariate smoothing of the covariance surface.
-pve	
-proportion of variance explained: used to choose the number of principal components.
-npc	
-prespecified value for the number of principal components (if given, this overrides pve).
-var	
-TRUE or FALSE indicating whether model-based estimates for the variance of FPCA expansions should be computed.
-simul	
-logical: should critical values be estimated for simultaneous confidence intervals?
-sim.alpha	
-1 - coverage probability of the simultaneous intervals.
-useSymm	
-logical, indicating whether to smooth only the upper triangular part of the naive covariance (when cov.est.method==2). This can save computation time for large data sets, and allows for covariance surfaces that are very peaked on the diagonal.
-makePD	
-logical: should positive definiteness be enforced for the covariance surface estimate?
-center	
-logical: should an estimated mean function be subtracted from Y? Set to FALSE if you have already demeaned the data using your favorite mean function estimate.
-cov.est.method	
-covariance estimation method. If set to 1, a one-step method that applies a bivariate smooth to the y(s_1)y(s_2) values. This can be very slow. If set to 2 (the default), a two-step method that obtains a naive covariance estimate which is then smoothed.
-integration	
-quadrature method for numerical integration; only 'trapezoidal' is currently supported.
+@param Y.pred: if desired, a matrix of functions to be approximated using the FPC decomposition. argvals: the argument values of the function evaluations in Y, defaults to a equidistant grid from 0 to 1. random.int
+If TRUE, the mean is estimated by gamm4 with random intercepts. If FALSE (the default), the mean is estimated by gam treating all the data as independent. nbasis
+number of B-spline basis functions used for estimation of the mean function and bivariate smoothing of the covariance surface. pve proportion of variance explained: used to choose the number of principal components. npc prespecified value for the number of principal components (if given, this overrides pve). var TRUE or FALSE indicating whether model-based estimates for the variance of FPCA expansions should be computed. simul
+logical: should critical values be estimated for simultaneous confidence intervals? sim.alpha
+1 - coverage probability of the simultaneous intervals. useSymm logical, indicating whether to smooth only the upper triangular part of the naive covariance (when cov.est.method==2). This can save computation time for large data sets, and allows for covariance surfaces that are very peaked on the diagonal. makePD
+logical: should positive definiteness be enforced for the covariance surface estimate? center
+logical: should an estimated mean function be subtracted from Y? Set to FALSE if you have already demeaned the data using your favorite mean function estimate. cov.est.method
+covariance estimation method. If set to 1, a one-step method that applies a bivariate smooth to the y(s\_1)y(s\_2) values. This can be very slow. If set to 2 (the default), a two-step method that obtains a naive covariance estimate which is then smoothed. integration quadrature method for numerical integration; only 'trapezoidal' is currently supported.
 
 ### examples
-```{r}
+
+``` r
 library(ggplot2)
 library(reshape2)
+```
+
+    ## 
+    ## Attaching package: 'reshape2'
+
+    ## The following object is masked from 'package:tidyr':
+    ## 
+    ##     smiths
+
+``` r
 data(cd4)
 ```
 
-We will work with the same cd4 matrix, containing one functional observation in each row, used in the Refund package. 
+We will work with the same cd4 matrix, containing one functional observation in each row, used in the Refund package.
 
-```{r}
+``` r
 cd4_tfd = cd4 %>%
   tfd()
 cd4_df = data_frame(cd4_tfd)
@@ -84,13 +68,24 @@ cd4_df = data_frame(cd4_tfd)
 head(cd4_df)
 ```
 
-I altered the cd4 matrix to be in a tfd format. Then made it into a dataframe with only one column: cd4_tfd. 
-```{r}
+    ## # A tibble: 6 x 1
+    ##   cd4_tfd                                   
+    ##   <S3: tfd_irreg>                           
+    ## 1 [1]: ( -9, 548);( -3, 893);(  3, 657)     
+    ## 2 [2]: ( -3, 752);(  3, 459);(  9, 181); ...
+    ## 3 [3]: (-15, 846);( -9,1102);( -3, 801); ...
+    ## 4 [4]: (-17,1277);( -9,1132);( -3,1454); ...
+    ## 5 [5]: ( -4, 994);(  4, 486);( 10, 605); ...
+    ## 6 [6]: (-17,1119);(-10, 729);( 10, 355)
+
+I altered the cd4 matrix to be in a tfd format. Then made it into a dataframe with only one column: cd4\_tfd.
+
+``` r
 source("./function/quadWeights.R")
 source("./function/fpca.tfd.R")
 ```
 
-```{r}
+``` r
 fit.cd4 = fpca.tfd(data = cd4_df, col = cd4_tfd, var = TRUE, simul = TRUE)
 
 fit.mu = data.frame(mu = fit.cd4$mu,
@@ -119,24 +114,34 @@ ggplot(ex.cd4.m, aes(x = n, y = value, group = variable, color = variable, linet
   scale_color_manual(values = c(fitted = 1, ptwise.UB = 2,
                      ptwise.LB = 2, simul.UB = 3, simul.LB = 3)) +
   labs(x = 'Months since seroconversion', y = 'Total CD4 Cell Count')
+```
 
+![](func_description_files/figure-markdown_github/unnamed-chunk-4-1.png)
+
+``` r
 ## plot estimated mean function
 ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() 
+```
 
+![](func_description_files/figure-markdown_github/unnamed-chunk-4-2.png)
+
+``` r
 ## plot the first two estimated basis functions
 fit.basis.m = melt(fit.basis, id = 'n')
 ggplot(subset(fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = n,
 y = value, group = variable, color = variable)) + geom_path()
 ```
 
+![](func_description_files/figure-markdown_github/unnamed-chunk-4-3.png)
 
-
-## ols_cs_tfd()
+ols\_cs\_tfd()
+--------------
 
 **Cross-sectional FoSR using GLS**
 
 ### Description
-(reference: https://github.com/refunders/refund/blob/master/R/OLS_CS.R)
+
+(reference: <https://github.com/refunders/refund/blob/master/R/OLS_CS.R>)
 
 Assuming that the response of the proposed model is a tfd class variable, it calls the response variable and alters it to be a matrix.
 
@@ -144,25 +149,25 @@ Fitting function for function-on-scalar regression for cross-sectional data. Thi
 
 ### Usage
 
-ols_cs_tfd(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE)
+ols\_cs\_tfd(formula, data=NULL, Kt=5, basis = "bs", verbose = TRUE)
 
 ### Arguments
 
-@param formula:	a formula indicating the structure of the proposed model. Takes in tfd class variable as the response.
+@param formula: a formula indicating the structure of the proposed model. Takes in tfd class variable as the response.
 
-@param data:	an optional data frame, list or environment containing the variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment from which the function is called.
+@param data: an optional data frame, list or environment containing the variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment from which the function is called.
 
-@param Kt:	number of spline basis functions used to estimate coefficient functions
+@param Kt: number of spline basis functions used to estimate coefficient functions
 
-@param basis:	basis type; options are "bs" for b-splines and "pbs" for periodic b-splines
+@param basis: basis type; options are "bs" for b-splines and "pbs" for periodic b-splines
 
-@param verbose:	logical defaulting to TRUE – should updates on progress be printed?
+@param verbose: logical defaulting to TRUE – should updates on progress be printed?
 
 ### Examples
 
 Reading in DTI (`refund::DTI`) and dti, a data frame derived from DTI with two columns containing functional data (cca, rcst) in tfd class instead of matrices.
 
-```{r}
+``` r
 DTI = refund::DTI
 
 dti = with(refund::DTI, 
@@ -172,16 +177,19 @@ dti = with(refund::DTI,
         mutate(cca = tfd(DTI$cca, seq(0,1, l = 93), signif = 2) %>%
                      tfd(arg = seq(0,1,l = 93)),
                rcst = tfd(DTI$rcst, seq(0, 1, l = 55), signif = 3))
-
 ```
 
-```{r}
+``` r
 source("./function/ols_cs_tfd.R")
 ```
 
-```{r}
+``` r
 dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
+```
 
+    ## Using OLS to estimate model parameters
+
+``` r
 models = c("dti.ols")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
 slopes = sapply(models, function(u) get(u)$beta.hat[2,])
@@ -190,9 +198,15 @@ slopes = sapply(models, function(u) get(u)$beta.hat[2,])
 plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
    geom_path() + theme_bw()
+```
 
+![](func_description_files/figure-markdown_github/unnamed-chunk-7-1.png)
+
+``` r
 # plotting estimated slopes
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
    geom_path() + theme_bw()
 ```
+
+![](func_description_files/figure-markdown_github/unnamed-chunk-7-2.png)
