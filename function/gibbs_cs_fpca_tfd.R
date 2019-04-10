@@ -1,4 +1,5 @@
 # Used libraries
+# dplyr - enquo %>%
 # splines - bs
 # MASS - mvrnorm
 # lme4 - mkReTrms findbars
