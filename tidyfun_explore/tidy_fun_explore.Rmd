@@ -1,7 +1,6 @@
 ---
-title: "explore tidyfun"
-author: "Sara Kim"
-date: "1/4/2019"
+title: "Functions Usage"
+author: "Gaeun Kim"
 output: github_document
 ---
 
@@ -12,11 +11,11 @@ library(tidyfun)
 library(refund)
 library(ggplot2)
 library(reshape2)
-source("../function/quadWeights.R")
-source("../function/fpca.tfd.R")
 ```
 
 First, let's read in our tf datasets.
+
+DTI 
 ```{r}
 temp_tfd = load("../data/temp_tfd.RData")
 handw_tfd= load("../data/handw_tfd.RData")
@@ -24,16 +23,31 @@ handw_tfd= load("../data/handw_tfd.RData")
 DTI = refund::DTI
 
 dti = with(refund::DTI, 
-  data.frame(id = ID, sex = sex, 
+  data.frame(id = ID, sex = sex, pasat = pasat, 
     case = factor(ifelse(case, "MS", "control")))) %>% as.tbl %>% 
         mutate(cca = tfd(DTI$cca, seq(0,1, l = 93), signif = 2) %>%
                      tfd(arg = seq(0,1,l = 93)),
                rcst = tfd(DTI$rcst, seq(0, 1, l = 55), signif = 3))
 ```
 
-fpca.tfd function examples
+cd4 
 ```{r}
-fit.cca = fpca.tfd(data = dti, col = rcst)
+data(cd4)
+cd4_tfd = cd4 %>%
+  tfd()
+cd4_df = data_frame(cd4_tfd)
+```
+
+## 1.fpca.tfd function example
+
+```{r}
+source("../function/quadWeights.R")
+source("../function/fpca.tfd.R")
+```
+
+```{r}
+# DTI
+fit.cca = fpca.tfd(data = dti, col = cca)
 
 fit.mu = data.frame(mu = fit.cca$mu,
                     n = 1:ncol(fit.cca$Yhat))
@@ -41,60 +55,40 @@ fit.basis = data.frame(phi = fit.cca$efunctions, #the FPC basis functions.
                        n = 1:ncol(fit.cca$Yhat))
 
 ## plot estimated mean function
-ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() 
+ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() + theme_bw()
 
 ## plot the first two estimated basis functions
 fit.basis.m = melt(fit.basis, id = 'n')
 ggplot(subset(fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = n,
-y = value, group = variable, color = variable)) + geom_path()
+y = value, group = variable, color = variable)) + geom_path() + theme_bw()
 
 ```
 
-putting cd4 dataset to fpca.tfd function
+Putting cd4 dataset to fpca.tfd function
 
 ```{r}
-data(cd4)
-# CD4 cell counts for 366 subjects between months -18 and 42 since seroconversion. Each subject's observations are contained in a single row.
-# subject * weeks
-
-cd4_tfd = cd4 %>%
-  tfd()
-cd4_df = data_frame(cd4_tfd, id = 1:366) %>%
-  select(cd4 = cd4_tfd, everything())
-
-fit.cd4 = cd4_df %>%
-  fpca.tfd(data =., col = cd4)
+fit.cd4 = fpca.tfd(data = cd4_df, col = cd4_tfd, var = TRUE, simul = TRUE)
 
 fit.mu = data.frame(mu = fit.cd4$mu,
                     n = 1:ncol(fit.cd4$Yhat))
 fit.basis = data.frame(phi = fit.cd4$efunctions, #the FPC basis functions.
                        n = 1:ncol(fit.cd4$Yhat))
 
-## plot estimated mean function
-ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() 
-```
-
-cd4 example on the refund page
-```{r}
-Fit.MM = fpca.sc(cd4, var = TRUE, simul = TRUE)
-
-Fit.mu = data.frame(mu = Fit.MM$mu,
-                    d = as.numeric(colnames(cd4)))
-Fit.basis = data.frame(phi = Fit.MM$efunctions, # d × npc matrix of estimated eigenfunctions of the functional covariance, i.e., the FPC basis functions.
-                       d = as.numeric(colnames(cd4)))
-
 ## for one subject, examine curve estimate, pointwise and simultaneous itervals
-EX = 1
-EX.MM = data.frame(fitted = Fit.MM$Yhat[EX,],
-           ptwise.UB = Fit.MM$Yhat[EX,] + 1.96 * sqrt(Fit.MM$diag.var[EX,]),
-           ptwise.LB = Fit.MM$Yhat[EX,] - 1.96 * sqrt(Fit.MM$diag.var[EX,]),
-           simul.UB = Fit.MM$Yhat[EX,] + Fit.MM$crit.val[EX] * sqrt(Fit.MM$diag.var[EX,]),
-           simul.LB = Fit.MM$Yhat[EX,] - Fit.MM$crit.val[EX] * sqrt(Fit.MM$diag.var[EX,]),
-           d = as.numeric(colnames(cd4)))
+ex = 1
+ex.cd4 = data.frame(fitted = fit.cd4$Yhat[ex,],
+           ptwise.UB = fit.cd4$Yhat[ex,] + 1.96 * sqrt(fit.cd4$diag.var[ex,]),
+           ptwise.LB = fit.cd4$Yhat[ex,] - 1.96 * sqrt(fit.cd4$diag.var[ex,]),
+           simul.UB = fit.cd4$Yhat[ex,] + fit.cd4$crit.val[ex] * sqrt(fit.cd4$diag.var[ex,]),
+           simul.LB = fit.cd4$Yhat[ex,] - fit.cd4$crit.val[ex] * sqrt(fit.cd4$diag.var[ex,]),
+           n = 1:ncol(fit.cd4$Yhat))
 
 ## plot data for one subject, with curve and interval estimates
-EX.MM.m = melt(EX.MM, id = 'd')
-ggplot(EX.MM.m, aes(x = d, y = value, group = variable, color = variable, linetype = variable)) +
+ex.cd4.m = melt(ex.cd4, id = 'n')
+
+## plot data for one subject, with curve and interval estimates
+ex.cd4.m = melt(ex.cd4, id = 'n')
+ggplot(ex.cd4.m, aes(x = n, y = value, group = variable, color = variable, linetype = variable)) +
   geom_path() +
   scale_linetype_manual(values = c(fitted = 1, ptwise.UB = 2,
                         ptwise.LB = 2, simul.UB = 3, simul.LB = 3)) +
@@ -103,61 +97,15 @@ ggplot(EX.MM.m, aes(x = d, y = value, group = variable, color = variable, linety
   labs(x = 'Months since seroconversion', y = 'Total CD4 Cell Count')
 
 ## plot estimated mean function
-ggplot(Fit.mu, aes(x = d, y = mu)) + geom_path() +
-  labs(x = 'Months since seroconversion', y = 'Total CD4 Cell Count')
+ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() 
 
 ## plot the first two estimated basis functions
-Fit.basis.m = melt(Fit.basis, id = 'd')
-ggplot(subset(Fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = d,
+fit.basis.m = melt(fit.basis, id = 'n')
+ggplot(subset(fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = n,
 y = value, group = variable, color = variable)) + geom_path()
-
-```
-looks same as the tfd version!
-
-Sample Code from Refund
-bayes_fosr:
-"Wrapper function that implements several approaches to Bayesian function on scalar regression."
-
-I won't alter DTI like they did in refund because I want it to be same as dti, a tdf format of DTI.
-```{r }
-##### Cross-sectional real-data examples #####
-
-## organize data
-data(DTI)
-#DTI = subset(DTI, select = c(cca, case, pasat))
-#DTI = DTI[complete.cases(DTI),]
-#DTI$gender = factor(sample(c("male","female"), dim(DTI)[1], replace = TRUE))
-#DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
-
-## fit models
-default = bayes_fosr(cca ~ pasat, data = DTI)
-VB = bayes_fosr(cca ~ pasat, data = DTI, Kp = 4, Kt = 10)
-# to run Gibbs download refund from devtools
-Gibbs = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "FPCA", N.iter = 500, N.burn = 200)
-## Gibbs Wishart
-Gibbs_wish = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "Wishart", N.iter = 500, N.burn = 200)
-OLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "OLS")
-GLS = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "GLS")
-
-## plot results
-models = c("default", "VB", "Gibbs", "OLS", "GLS")
-intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
-slopes = sapply(models, function(u) get(u)$beta.hat[2,])
-
-plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
-ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
-   geom_path() + theme_bw()
-
-plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
-ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
-   geom_path() + theme_bw()
 ```
 
-ols_cs:
-"Fitting function for function-on-scalar regression for cross-sectional data."
-```{r original ols}
-dti.ols = ols_cs(cca ~ pasat, data = DTI, Kt = 10)
-```
+## 2. ols_cs_tfd function example
 
 Below is a ols function for cross-sectional tfd datasets.
 ```{r}
@@ -169,49 +117,22 @@ I will put in our tf dataset that we made in the beginning, dti.
 ```{r fit tf ols}
 dti["pasat"] = DTI$pasat
 
-dti.ols.prac = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
+dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
 
-models = c("dti.ols", "dti.ols.prac")
+models = c("dti.ols")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
 slopes = sapply(models, function(u) get(u)$beta.hat[2,])
 
 plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
-   geom_path() + theme_bw()
-
+   geom_path() + theme_bw() 
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
-   geom_path() + theme_bw()
+   geom_path() + theme_bw() 
 ```
 
-The dataset altered inside ols_cs_tfd seems to be same as DTI except the null values inside DTI have been imputed in the tfd. I belive because of that It's giving slightly different results as we can see in the graph above. 
-
-```{r}
-dti_testing = dti
-dti_testing["cca"] = dti$cca %>% 
-  as.data.frame() %>%
-  spread(key = arg, value = value) %>%
-  select(-id) %>%
-  as.matrix() 
-
-dti_cca = dti_testing$cca %>% as.data.frame()
-DTI_cca = DTI$cca %>% as.data.frame()
-rownames(dti_cca) = rownames(DTI_cca)
-colnames(dti_cca) = colnames(DTI_cca)
-
-dti_cca %>% is.na() %>% sum() #0 
-DTI_cca %>% is.na() %>% sum() #36
-```
-
-So I see that while both cca columns have the sme values for non-missing data, cca at dti have no missing values while DTI has 36 missings.
 
 gibbs_cs_fpca:
-"Cross-sectional FoSR using a Gibbs sampler and FPCA"
-```{r}
-Gibbs_bayes = bayes_fosr(cca ~ pasat, data = DTI, Kt = 10, est.method = "Gibbs", cov.method = "FPCA", N.iter = 500, N.burn = 200)
-
-gibbs = gibbs_cs_fpca(cca ~ pasat, data = DTI, Kt = 10, N.iter = 500, N.burn = 200)
-```
 
 ```{r}
 source("../function/gibbs_cs_fpca_tfd.R")
@@ -226,21 +147,21 @@ source("../function/gibbs_cs_wish_tfd.R")
 ```
 
 ```{r}
-gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+gibbs_dti_wish = gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
 ```
 
 ```{r}
-models = c("Gibbs_bayes", "gibbs", "gibbs_dti", "gibbs_dti_wish")
+models = c("dti.ols", "gibbs_dti", "gibbs_dti_wish")
 intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
 slopes = sapply(models, function(u) get(u)$beta.hat[2,])
 
 plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
-   geom_path() + theme_bw()
+   geom_path() + theme_bw() + ylab("intercept")
 
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
 ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
-   geom_path() + theme_bw()
+   geom_path() + theme_bw() + ylab("slope")
 ```
 
-So I've graphed intercepts and slopes from four functions using Gibbs sampler. They all seems to differ slightly. Strangely, Gibbs_bayes and gibbs were fitted using the same `gibbs_cs_fpca` function but still gives different results. (Why?)
+I've graphed intercept and slope estimates from the three functions.
