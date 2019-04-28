@@ -11,6 +11,8 @@ library(tidyfun)
 library(refund)
 library(ggplot2)
 library(reshape2)
+source("./function/quadWeights.R")
+source("./function/fpca.tfd.R")
 ```
 
 First, let's read in our tf datasets.
@@ -115,8 +117,6 @@ source("../function/ols_cs_tfd.R")
 I will put in our tf dataset that we made in the beginning, dti.
 
 ```{r fit tf ols}
-dti["pasat"] = DTI$pasat
-
 dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
 
 models = c("dti.ols")
@@ -164,4 +164,4 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw() + ylab("slope")
 ```
 
-I've graphed intercept and slope estimates from the three functions.
+The graph above showw the intercept and slope estimates from the three functions.

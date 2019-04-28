@@ -1,5 +1,5 @@
 ---
-title: "tdf Exploration"
+title: "tfd Exploration"
 author: "Gaeun Kim"
 output: github_document
 ---
@@ -36,7 +36,7 @@ temp_tfd = with(temp_df,
 # tfd(temp_df$temp)) (1, -4) to jan1, -4? 
 
 ```
-Made the temp data to a `tdf` format!
+Made the temp data to a `tfd` format!
 
 Let's graph them.
 
@@ -143,11 +143,11 @@ handw_tfd %>%
 
 ```
 
-We can't combine x and y coordinates in `tdf` format :( (x and y are not all unique values).
+We can't combine x and y coordinates in `tfd` format :( (x and y are not all unique values).
 
 Saving the datasets
 
 ```{r}
-#save(temp_tfd, file = "../data/temp_tdf.RData")
-#save(handw_tfd, file = "../data/handw_tdf.RData")
+#save(temp_tfd, file = "../data/temp_tfd.RData")
+#save(handw_tfd, file = "../data/handw_tfd.RData")
 ```

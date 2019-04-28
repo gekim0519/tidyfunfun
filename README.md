@@ -9,15 +9,15 @@ easy, especially for data wrangling and exploratory analysis.
 Look [here](https://fabian-s.github.io/tidyfun/) for an introduction on
 **`tidyfun`** with examples.
 
-Further examples on data wrangling and plotting with tdf class on this
-github page can be found in the data preparation folder
+Further examples on data wrangling and plotting with **`tfd`** class on
+this github page can be found in the data preparation folder
 [here](https://github.com/gekim0519/tidyfun_fpca/blob/master/data_preparation/preparation.md).
 
 ## Objective
 
   - The role of this project is to extend functions for FDA in
     **`tidyfun`**. Specially, four functions were made for conducting
-    fpca and function-on-scalar regression on `tfd` data types.
+    fpca and function-on-scalar regression on **`tfd`** data types.
   - The functions are modified from the **`refund`** package
     ([link](https://github.com/refunders/refundable)) to take in a
     dataframe containing `tfd` columns directly as an input.
@@ -69,7 +69,31 @@ dti %>%
     ## 5  1005 male      NA contr… 1005_1: (0.000,0.40);(… 1005_1: ( 0.22,0.40);(…
     ## 6  1006 male      NA contr… 1006_1: (0.000,0.45);(… 1006_1: (0.056,0.47);(…
 
-Let’s view cca in a spaghetti plot.
+Let’s get a closer look at `tfd` object, cca.
+
+``` r
+dti$cca
+```
+
+    ## tfd[382] on (0,1) based on 93 evaluations each
+    ## interpolation by tf_approx_linear 
+    ## 1001_1: (0.000,0.49);(0.011,0.52);(0.022,0.54); ...
+    ## 1002_1: (0.000,0.47);(0.011,0.49);(0.022,0.50); ...
+    ## 1003_1: (0.000,0.50);(0.011,0.51);(0.022,0.54); ...
+    ## 1004_1: (0.000,0.40);(0.011,0.42);(0.022,0.44); ...
+    ## 1005_1: (0.000,0.40);(0.011,0.41);(0.022,0.40); ...
+    ## 1006_1: (0.000,0.45);(0.011,0.45);(0.022,0.46); ...
+    ## 1007_1: (0.000,0.55);(0.011,0.56);(0.022,0.56); ...
+    ## 1008_1: (0.000,0.45);(0.011,0.48);(0.022,0.50); ...
+    ## 1009_1: (0.000,0.50);(0.011,0.51);(0.022,0.52); ...
+    ## 1010_1: (0.000,0.46);(0.011,0.47);(0.022,0.48); ...
+    ##     [....]   (372 not shown)
+
+We can see the data neatly in a ![(t,
+f\_i(t))](https://latex.codecogs.com/png.latex?%28t%2C%20f_i%28t%29%29
+"(t, f_i(t))") format.
+
+Also now we can easily graph `cca` using **`ggplot`**.
 
 ``` r
 dti %>%  
@@ -77,7 +101,7 @@ dti %>%
   geom_spaghetti(alpha = .3) + xlab("days") + theme(legend.position="none") + ggtitle("FA tract profiles from the corpus callosum")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ## Functions and Usage
 
@@ -93,14 +117,14 @@ Y\_i(t) = \\mu(t) + \\sum C\_{ik} \\phi\_{k}(t) + \\epsilon\_i(t)
 Y_i(t) = \\mu(t) + \\sum C_{ik} \\phi_{k}(t) + \\epsilon_i(t) 
 ")  
 
-**`fpca.tdf`**
+**`fpca.tfd`**
 
   - Decomposes functional observations using functional principal
     components analysis. A mixed model framework is used to estimate
     scores and obtain variance estimates.
-  - Altered from `refund::fpca.sc`, fpca.tfd allows users to apply the
-    function directly on dataframes with a tfd column, specified in the
-    `col` argument.
+  - Altered from **`refund::fpca.sc`**, `fpca.tfd` allows users to apply
+    the function directly on dataframes with a `tfd` column, specified
+    in the `col` argument.
   - Uses penalized splines to smooth the covariance function, as
     developed by Di et al. (2009) and Goldsmith et al. (2013).
 
@@ -123,7 +147,7 @@ Let’s plot the estimated mean function of `cca`.
 ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() + theme_bw() + ggtitle("Estimated mean function of corpus callosum")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 There are nine basis eigenfunctions in `fit.basis`. Let’s plot the first
 two.
@@ -135,7 +159,7 @@ ggplot(subset(fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = n,
 y = value, group = variable, color = variable)) + geom_path() + theme_bw() + ggtitle("First two estimated FPC basis functions")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 #### Function-on-Scalar Regression (FoSR)
 
@@ -154,7 +178,7 @@ y_i(t) = \\beta_{0}(t) + \\sum x_{ik} \\beta_{k}(t) + \\epsilon_i(t)
 
   - Fitting function for FoSR for cross-sectional data, estimates model
     parameters using GLS.
-  - Edited `refund::ols_cs`, while the inputs did not change,
+  - Edited **`refund::ols_cs`**, while the inputs did not change,
     `ols_cs_tfd`’s argument, `data` will be a dataframe with a `tfd`
     type column, which will be the response of the proposed model.
 
@@ -163,10 +187,10 @@ y_i(t) = \\beta_{0}(t) + \\sum x_{ik} \\beta_{k}(t) + \\epsilon_i(t)
   - Fitting function for FoSR for cross-sectional data, estimates model
     parameters using Gibbs sampler and estimates the residual covariance
     using Bayesian FPCA and Wishart prior, respectively.
-  - Functions were alterations of `refund::gibbs_cs_fpca` and
-    `refund::gibbs_cs_wish` also from the Refund library. Same as
-    `ols_cs_tfd`, the functions take in a dataframe with tfd column as
-    an
+  - Functions were alterations of **`refund::gibbs_cs_fpca`** and
+    **`refund::gibbs_cs_wish`** also from the **`refund`** library. Same
+    as `ols_cs_tfd`, the functions take in a dataframe with `tfd` column
+    as an
     input.
 
 #### Example
@@ -205,7 +229,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw() + ylab("intercept")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
@@ -213,9 +237,9 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw() + ylab("slope")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
 
-Above is a graph of estimated coeficient functions (intercept, slope)
-from the three functions.
+Above is a graph of estimated coefficient functions (intercept, slope)
+from the three fitting functions.
 
 \`

@@ -26,12 +26,12 @@ source("./function/gibbs_cs_wish_tfd.R")
 
 Look [here](https://fabian-s.github.io/tidyfun/) for an introduction on **`tidyfun`**  with examples.
 
-Further examples on data wrangling and plotting with tdf class on this github page can be found in the data preparation folder 
+Further examples on data wrangling and plotting with **`tfd`** class on this github page can be found in the data preparation folder 
 [here](https://github.com/gekim0519/tidyfun_fpca/blob/master/data_preparation/preparation.md).
 
 ## Objective
 
-- The role of this project is to extend functions for FDA in **`tidyfun`**. Specially, four functions were made for conducting fpca and function-on-scalar regression on `tfd` data types.
+- The role of this project is to extend functions for FDA in **`tidyfun`**. Specially, four functions were made for conducting fpca and function-on-scalar regression on **`tfd`** data types.
 - The functions are modified from the **`refund`** package ([link]( https://github.com/refunders/refundable)) to take in a dataframe containing `tfd` columns directly as an input.
 
 ## Data Description
@@ -60,7 +60,14 @@ dti %>%
   head()
 ```
 
-Let's view cca in a spaghetti plot.
+Let's get a closer look at `tfd` object, cca. 
+
+```{r}
+dti$cca
+```
+We can see the data neatly in a $(t, f_i(t))$ format.
+
+Also now we can easily graph `cca` using **`ggplot`**.
 
 ```{r}
 dti %>%  
@@ -78,10 +85,10 @@ $$
 Y_i(t) = \mu(t) + \sum C_{ik} \phi_{k}(t) + \epsilon_i(t) 
 $$
 
-**`fpca.tdf`**
+**`fpca.tfd`**
 
 - Decomposes functional observations using functional principal components analysis. A mixed model framework is used to estimate scores and obtain variance estimates.
-- Altered from `refund::fpca.sc`, fpca.tfd  allows users to apply the function directly on dataframes with a tfd column, specified in the `col` argument.
+- Altered from **`refund::fpca.sc`**, `fpca.tfd`  allows users to apply the function directly on dataframes with a `tfd` column, specified in the `col` argument.
 - Uses penalized splines to smooth the covariance function, as developed by Di et al. (2009) and Goldsmith et al. (2013).
 
 #### Example
@@ -123,13 +130,13 @@ $$
 **ols_cs_tfd**
 
 - Fitting function for FoSR for cross-sectional data, estimates model parameters using GLS.
-- Edited `refund::ols_cs`, while the inputs did not change, `ols_cs_tfd`’s argument, `data` will be a dataframe with a `tfd` type column, which will be the response of the proposed model.
+- Edited **`refund::ols_cs`**, while the inputs did not change, `ols_cs_tfd`’s argument, `data` will be a dataframe with a `tfd` type column, which will be the response of the proposed model.
 
 
 **gibbs_cs_fpca_tfd**
 
 - Fitting function for FoSR for cross-sectional data, estimates model parameters using Gibbs sampler and estimates the residual covariance using Bayesian FPCA and Wishart prior, respectively.
-- Functions were alterations of `refund::gibbs_cs_fpca` and `refund::gibbs_cs_wish` also from the Refund library. Same as `ols_cs_tfd`, the functions take in a dataframe with tfd column as an input.
+- Functions were alterations of **`refund::gibbs_cs_fpca`** and **`refund::gibbs_cs_wish`** also from the **`refund`** library. Same as `ols_cs_tfd`, the functions take in a dataframe with `tfd` column as an input.
 
 #### Example
 
@@ -159,7 +166,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw() + ylab("slope")
 ```
 
-Above is a graph of estimated coeficient functions (intercept, slope) from the three functions.
+Above is a graph of estimated coefficient functions (intercept, slope) from the three fitting functions.
 
 `
 
