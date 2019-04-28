@@ -13,6 +13,9 @@ library(tidyfun)
 library(ggplot2)
 source("./function/quadWeights.R")
 source("./function/fpca.tfd.R")
+source("./function/ols_cs_tfd.R")
+source("./function/gibbs_cs_fpca_tfd.R")
+source("./function/gibbs_cs_wish_tfd.R")
 ```
 
 ## FDA Functions for tf-Class
@@ -28,8 +31,8 @@ Further examples on data wrangling and plotting with tdf class on this github pa
 
 ## Objective
 
-- The role of this project is to extend functions for FDA. Specially, four functions were made for conducting fpca and function-on-scalar regression on tfd data types.
-- The functions are modified from the **`refund`** package ([link]( https://github.com/refunders/refundable)) to take in a dataframe containing tfd columns directly as an input.
+- The role of this project is to extend functions for FDA in **`tidyfun`**. Specially, four functions were made for conducting fpca and function-on-scalar regression on `tfd` data types.
+- The functions are modified from the **`refund`** package ([link]( https://github.com/refunders/refundable)) to take in a dataframe containing `tfd` columns directly as an input.
 
 ## Data Description
 
@@ -40,14 +43,14 @@ The type of data we will be working with is **`tf`-Class** data and more specifi
 - Fractional anisotropy (FA) tract profiles for the corpus callosum (cca) and the right corticospinal tract (rcst).
 - The MRI/DTI data were collected at Johns Hopkins University and the Kennedy-Krieger Institute.
 - `DTI` has 382 rows and 9 columns including two functional covariates (`cca`, `rcst`) in forms of matrices. 
-- Using tidyfun, new dataframe `dti` has cca and rcst in tfd type.
+- Using tidyfun, new dataframe `dti` has `cca` and `rcst` as `tfd` objects.
 - Link to further description: [rdrr.io/cran/refund/man/DTI.html](rdrr.io/cran/refund/man/DTI.html)
 
 ```{r}
 DTI = refund::DTI
 
 dti = with(refund::DTI, 
-  data.frame(id = ID, sex = sex, 
+  data.frame(id = ID, sex = sex, pasat = pasat, 
     case = factor(ifelse(case, "MS", "control")))) %>% as.tbl %>% 
         mutate(cca = tfd(DTI$cca, seq(0,1, l = 93), signif = 2) %>%
                      tfd(arg = seq(0,1,l = 93)),
@@ -120,9 +123,43 @@ $$
 **ols_cs_tfd**
 
 - Fitting function for FoSR for cross-sectional data, estimates model parameters using GLS.
-- We edited `refund::ols_cs`. While the inputs did not change, `ols_cs_tfd`’s argument, data will be a dataframe with `tfd` type column, which will be the response of the proposed model.
+- Edited `refund::ols_cs`, while the inputs did not change, `ols_cs_tfd`’s argument, `data` will be a dataframe with a `tfd` type column, which will be the response of the proposed model.
 
 
+**gibbs_cs_fpca_tfd**
+
+- Fitting function for FoSR for cross-sectional data, estimates model parameters using Gibbs sampler and estimates the residual covariance using Bayesian FPCA and Wishart prior, respectively.
+- Functions were alterations of `refund::gibbs_cs_fpca` and `refund::gibbs_cs_wish` also from the Refund library. Same as `ols_cs_tfd`, the functions take in a dataframe with tfd column as an input.
+
+#### Example
+
+```{r}
+dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
+```
+
+```{r}
+gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+```
+
+```{r}
+gibbs_dti_wish = gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+```
+
+```{r}
+models = c("dti.ols", "gibbs_dti", "gibbs_dti_wish")
+intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
+slopes = sapply(models, function(u) get(u)$beta.hat[2,])
+
+plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
+ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw() + ylab("intercept")
+
+plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
+ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) + 
+   geom_path() + theme_bw() + ylab("slope")
+```
+
+Above is a graph of estimated coeficient functions (intercept, slope) from the three functions.
 
 `
 
