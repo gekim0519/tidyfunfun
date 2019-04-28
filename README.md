@@ -16,8 +16,9 @@ this github page can be found in the data preparation folder
 ## Objective
 
   - The role of this project is to extend functions for FDA in
-    **`tidyfun`**. Specially, four functions were made for conducting
-    fpca and function-on-scalar regression on **`tfd`** data types.
+    **`tidyfun`**. Specfically, four functions were made for conducting
+    **fpca** and **function-on-scalar regression** on **`tfd`** data
+    types.
   - The functions are modified from the **`refund`** package
     ([link](https://github.com/refunders/refundable)) to take in a
     dataframe containing `tfd` columns directly as an input.
