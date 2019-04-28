@@ -1,6 +1,5 @@
 ---
 title: "Functions Usage"
-author: "Gaeun Kim"
 output: github_document
 ---
 
@@ -11,8 +10,8 @@ library(tidyfun)
 library(refund)
 library(ggplot2)
 library(reshape2)
-source("./function/quadWeights.R")
-source("./function/fpca.tfd.R")
+source("../function/quadWeights.R")
+source("../function/fpca.tfd.R")
 ```
 
 First, let's read in our tf datasets.

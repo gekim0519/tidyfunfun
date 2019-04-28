@@ -1,6 +1,5 @@
 ---
 title: "tfd Exploration"
-author: "Gaeun Kim"
 output: github_document
 ---
 
