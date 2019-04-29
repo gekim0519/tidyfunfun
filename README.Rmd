@@ -168,7 +168,18 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
 
 Above is a graph of estimated coefficient functions (intercept, slope) from the three fitting functions.
 
-`
+## Directories
 
+Additionally, go to...
+
+**data_preparation** folder ([link](https://github.com/gekim0519/tidyfun_fpca/tree/master/data_preparation)) for more examples on how the functional data in dataframes were transformed to `tfd` objects.
+Specifically, view preparation.md [here](https://github.com/gekim0519/tidyfun_fpca/blob/master/data_preparation/preparation.md)
+
+**function** folder ([link](https://github.com/gekim0519/tidyfun_fpca/tree/master/function))
+to see the source code of the new functions.
+
+**tidyfun_explore** folder ([link](https://github.com/gekim0519/tidyfun_fpca/tree/master/tidyfun_explore)) to see more examples on the function usages. You can view the tidyfun_explore.md file [here](https://github.com/gekim0519/tidyfun_fpca/blob/master/tidyfun_explore/tidyfun_explore.md).
+
+**data** folder contains functional datasets and their alterations that are from [https://www.psych.mcgill.ca/misc/fda/downloads/FDAfuns/R/data/](https://www.psych.mcgill.ca/misc/fda/downloads/FDAfuns/R/data/).
 
 
