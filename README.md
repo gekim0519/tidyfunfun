@@ -263,6 +263,5 @@ to see more examples on the function usages. You can view the
 tidyfun\_explore.md file
 [here](https://github.com/gekim0519/tidyfun_fpca/blob/master/tidyfun_explore/tidyfun_explore.md).
 
-**data** folder contains functional datasets and their alterations that
-are from
+**data** folder contains functional datasets from
 <https://www.psych.mcgill.ca/misc/fda/downloads/FDAfuns/R/data/>.
