@@ -39,7 +39,7 @@ stored as vectors. More information on **`tf`-Class** can be found
     Kennedy-Krieger Institute.
   - `DTI` has 382 rows and 9 columns including two functional covariates
     (`cca`, `rcst`) in forms of matrices.
-  - Using tidyfun, new dataframe `dti` has `cca` and `rcst` as `tfd`
+  - Using `tidyfun`, new dataframe `dti` has `cca` and `rcst` as `tfd`
     objects.
   - Link to further description:
     [rdrr.io/cran/refund/man/DTI.html](rdrr.io/cran/refund/man/DTI.html)
@@ -70,7 +70,7 @@ dti %>%
     ## 5  1005 male      NA contr… 1005_1: (0.000,0.40);(… 1005_1: ( 0.22,0.40);(…
     ## 6  1006 male      NA contr… 1006_1: (0.000,0.45);(… 1006_1: (0.056,0.47);(…
 
-Let’s get a closer look at `tfd` object, cca.
+Let’s get a closer look at `tfd` object, `cca`.
 
 ``` r
 dti$cca
