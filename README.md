@@ -183,7 +183,7 @@ y_i(t) = \\beta_{0}(t) + \\sum x_{ik} \\beta_{k}(t) + \\epsilon_i(t)
     `ols_cs_tfd`’s argument, `data` will be a dataframe with a `tfd`
     type column, which will be the response of the proposed model.
 
-**gibbs\_cs\_fpca\_tfd**
+**gibbs\_cs\_fpca\_tfd, gibbs\_cs\_wish\_tfd**
 
   - Fitting function for FoSR for cross-sectional data, estimates model
     parameters using Gibbs sampler and estimates the residual covariance
