@@ -57,7 +57,7 @@
 #'   geom_path() + theme_bw() + ylab("slope")
 #' }
 #'
-#' @importFrom dplyr enquo "%>%"
+#' @importFrom dplyr enquo "%>%" pull
 #' @importFrom splines bs
 #' @importFrom MASS mvrnorm
 #' @importFrom stats rWishart

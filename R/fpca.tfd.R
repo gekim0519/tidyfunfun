@@ -105,7 +105,7 @@
 ##'
 ##' }
 ##' @export
-##' @importFrom dplyr enquo "%>%"
+##' @importFrom dplyr enquo "%>%" pull
 ##' @importFrom Matrix nearPD Matrix t as.matrix
 ##' @importFrom mgcv gam predict.gam
 ##' @importFrom gamm4 gamm4
