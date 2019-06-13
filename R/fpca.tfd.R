@@ -104,12 +104,15 @@
 ##'        geom_path() + theme_bw() + ggtitle("First two estimated FPC basis functions")
 ##'
 ##' }
-##' @export
-##' @importFrom dplyr enquo "%>%" pull
+##'
+##' @importFrom dplyr "%>%" enquo pull select
+##' @importFrom tidyr spread
 ##' @importFrom Matrix nearPD Matrix t as.matrix
 ##' @importFrom mgcv gam predict.gam
 ##' @importFrom gamm4 gamm4
 ##' @importFrom MASS mvrnorm
+##' @export
+##'
 fpca.tfd <- function(data = NULL, col = NULL, Y.pred = NULL, argvals = NULL, random.int = FALSE,
                      nbasis = 10, pve = 0.99, npc = NULL, var = FALSE, simul = FALSE, sim.alpha = 0.95,
                      useSymm = FALSE, makePD = FALSE, center = TRUE, cov.est.method = 2, integration = "trapezoidal") {

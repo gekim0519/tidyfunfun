@@ -50,7 +50,8 @@
 #' ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
 #'   geom_path() + theme_bw() + ylab("slope")
 #' }
-#' @importFrom dplyr "%>%" enquo pull
+#' @importFrom dplyr "%>%" enquo pull select
+#' @importFrom tidyr spread
 #' @importFrom splines bs
 #' @importFrom pbs pbs
 #' @export

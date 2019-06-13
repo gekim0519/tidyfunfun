@@ -57,11 +57,13 @@
 #'   geom_path() + theme_bw() + ylab("slope")
 #' }
 #'
-#' @importFrom dplyr enquo "%>%" pull
+#' @importFrom dplyr "%>%" enquo pull select
+#' @importFrom tidyr spread
 #' @importFrom splines bs
 #' @importFrom MASS mvrnorm
 #' @importFrom stats rWishart
 #' @export
+#'
 
 Xt_siginv_X = function(tx, siginv, y = NULL){
 

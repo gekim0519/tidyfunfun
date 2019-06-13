@@ -118,6 +118,7 @@ ggplot(subset(fit.basis.m, variable \%in\% c('phi.1', 'phi.2')),
        geom_path() + theme_bw() + ggtitle("First two estimated FPC basis functions")
 
 }
+
 }
 \references{
 Di, C., Crainiceanu, C., Caffo, B., and Punjabi, N. (2009).
