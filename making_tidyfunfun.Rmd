@@ -1,0 +1,37 @@
+---
+title: "Tidyfunfun"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(devtools)
+library(roxygen2)
+```
+
+```{r}
+#create("tidyfunfun")
+```
+
+
+```{r}
+setwd("/Users/sara/Desktop/study/tidyfunfun")
+document()
+```
+
+```{r}
+setwd("..")
+install("tidyfunfun")
+```
+
+```{r}
+? fpca.tfd
+? ols_cs_tfd
+? gibbs_cs_fpca_tfd
+? gibbs_cs_wish_tfd
+```
+
+```{r}
+.rs.restartR() 
+```
+
