@@ -37,8 +37,8 @@
 #' \dontrun{
 #' library(ggplot2)
 #' library(reshape2)
-#' data(dti)  ##??? should I do data(DTI) and get it from refund? Or include dti data to be included in the package?
-#'
+#' data(dti) 
+#' 
 #' dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
 #' gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
 #' gibbs_dti_wish = gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
@@ -63,15 +63,13 @@
 #' @importFrom MASS mvrnorm
 #' @importFrom stats rWishart
 #' @export
-#'
-
 gibbs_cs_wish_tfd = function(formula, Kt=5, data=NULL, verbose = TRUE, N.iter = 5000, N.burn = 1000, alpha = .1,
                             min.iter = 10, max.iter = 50, Aw = NULL, Bw = NULL, v = NULL, SEED = NULL){
 
   # depent y is tf
   col = attr(terms(formula(formula)),"variables")
   col = col[[2]]
-  col = enquo(col)
+  col = dplyr::enquo(col)
 
   tfd = data %>%
     pull(!! col)

@@ -33,7 +33,7 @@
 #' Assessing Systematic Effects of Stroke on Motor Control using Hierarchical
 #' Function-on-Scalar Regression. \emph{Journal of the Royal Statistical Society:
 #' Series C}, 65 215-236.
-
+#' 
 #' @author Gaeun Kim \email{gk2501@columbia.edu} and
 #' Jeff Goldsmith \email{ajg2202@@cumc.columbia.edu}
 #'
@@ -41,8 +41,8 @@
 #' \dontrun{
 #' library(ggplot2)
 #' library(reshape2)
-#' data(dti)  ##??? should I do data(DTI) and get it from refund? Or include dti data to be included in the package?
-#'
+#' data(dti) 
+#' 
 #' dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
 #' gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
 #' gibbs_dti_wish = gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
@@ -67,8 +67,6 @@
 #' @importFrom MASS mvrnorm
 #' @importFrom lme4 mkReTrms findbars
 #' @export
-#'
-
 gibbs_cs_fpca_tfd = function(formula, Kt=5, Kp=2, data=NULL, verbose = TRUE, N.iter = 5000, N.burn = 1000, SEED = NULL,
          sig2.me = .01, alpha = .1, Aw = NULL, Bw = NULL, Apsi = NULL, Bpsi = NULL){
 
@@ -317,3 +315,13 @@ gibbs_cs_fpca_tfd = function(formula, Kt=5, Kp=2, data=NULL, verbose = TRUE, N.i
   ret
 
 }
+
+
+
+
+###############################################################
+###############################################################
+###############################################################
+###############################################################
+###############################################################
+###############################################################
