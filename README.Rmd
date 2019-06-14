@@ -11,6 +11,7 @@ library(refund)
 library(reshape2)
 library(tidyfun)
 library(ggplot2)
+library(tidyfunfun)
 # source("./function/quadWeights.R")
 # source("./function/fpca.tfd.R")
 # source("./function/ols_cs_tfd.R")
@@ -28,7 +29,6 @@ library(ggplot2)
 ```{r, message=FALSE}
 # install.packages("devtools")
 devtools::install_github('gekim0519/tidyfunfun')
-
 ```
 
 ## Introduction
@@ -167,7 +167,7 @@ gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.
 ```
 
 ```{r}
-gibbs_dti_wish = gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
 ```
 
 ```{r}

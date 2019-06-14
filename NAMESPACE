@@ -2,7 +2,6 @@
 
 export(fpca.tfd)
 export(gibbs_cs_fpca_tfd)
-export(gibbs_cs_wish_tfd)
 export(ols_cs_tfd)
 importFrom(MASS,mvrnorm)
 importFrom(Matrix,Matrix)
@@ -21,5 +20,4 @@ importFrom(mgcv,predict.gam)
 importFrom(pbs,pbs)
 importFrom(refund,quadWeights)
 importFrom(splines,bs)
-importFrom(stats,rWishart)
 importFrom(tidyr,spread)
