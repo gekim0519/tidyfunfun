@@ -62,7 +62,6 @@
 #' @importFrom splines bs
 #' @importFrom MASS mvrnorm
 #' @importFrom stats rWishart
-#' @importFrom refund XtSiginvX
 #' @export
 #'
 

@@ -13,6 +13,9 @@ library(roxygen2)
 #create("tidyfunfun")
 ```
 
+# Memo
+issues:
+Error : object ‘XtSiginvX’ is not exported by 'namespace:refund'
 
 ```{r}
 setwd("/Users/sara/Desktop/study/tidyfunfun")

@@ -11,12 +11,12 @@ library(refund)
 library(reshape2)
 library(tidyfun)
 library(ggplot2)
-source("./function/quadWeights.R")
-source("./function/fpca.tfd.R")
-source("./function/ols_cs_tfd.R")
-source("./function/gibbs_cs_fpca_tfd.R")
-source("./function/gibbs_cs_wish_tfd.R")
-source("./function/XtSiginvX.R")
+# source("./function/quadWeights.R")
+# source("./function/fpca.tfd.R")
+# source("./function/ols_cs_tfd.R")
+# source("./function/gibbs_cs_fpca_tfd.R")
+# source("./function/gibbs_cs_wish_tfd.R")
+# source("./function/XtSiginvX.R")
 ```
 
 ## tidyfunfun
@@ -28,6 +28,7 @@ source("./function/XtSiginvX.R")
 ```{r, message=FALSE}
 # install.packages("devtools")
 devtools::install_github('gekim0519/tidyfunfun')
+
 ```
 
 ## Introduction
