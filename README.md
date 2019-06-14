@@ -10,6 +10,10 @@
 devtools::install_github('gekim0519/tidyfunfun')
 ```
 
+``` r
+library(tidyfunfun)
+```
+
 ## Introduction
 
 **`tidyfun`** is geared toward making functional data analysis (FDA)
@@ -117,7 +121,7 @@ dti %>%
   geom_spaghetti(alpha = .3) + xlab("days") + theme(legend.position="none") + ggtitle("FA tract profiles from the corpus callosum")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ## Functions and Usage
 
@@ -163,7 +167,7 @@ Let’s plot the estimated mean function of `cca`.
 ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() + theme_bw() + ggtitle("Estimated mean function of corpus callosum")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 There are nine basis eigenfunctions in `fit.basis`. Let’s plot the first
 two.
@@ -175,7 +179,7 @@ ggplot(subset(fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = n,
 y = value, group = variable, color = variable)) + geom_path() + theme_bw() + ggtitle("First two estimated FPC basis functions")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 #### Function-on-Scalar Regression (FoSR)
 
@@ -207,17 +211,13 @@ y_i(t) = \\beta_{0}(t) + \\sum x_{ik} \\beta_{k}(t) + \\epsilon_i(t)
     **`refund::gibbs_cs_wish`** also from the **`refund`** library. Same
     as `ols_cs_tfd`, the functions take in a dataframe with `tfd` column
     as an
-    input.
+input.
 
 #### Example
 
 ``` r
 dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
 ```
-
-    ## Warning: Using `as.character()` on a quosure is soft-deprecated as of rlang 0.3.0.
-    ## Please use `quo_text()` intead.
-    ## This warning is displayed once per session.
 
     ## Using OLS to estimate model parameters
 
@@ -229,7 +229,7 @@ gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.
     ## ..........
 
 ``` r
-gibbs_dti_wish = gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
 ```
 
     ## Beginning Sampler 
@@ -245,7 +245,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw() + ylab("intercept")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
@@ -253,7 +253,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw() + ylab("slope")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
 
 Above is a graph of estimated coefficient functions (intercept, slope)
 from the three fitting functions.

@@ -11,7 +11,6 @@ library(refund)
 library(reshape2)
 library(tidyfun)
 library(ggplot2)
-library(tidyfunfun)
 # source("./function/quadWeights.R")
 # source("./function/fpca.tfd.R")
 # source("./function/ols_cs_tfd.R")
@@ -29,6 +28,10 @@ library(tidyfunfun)
 ```{r, message=FALSE}
 # install.packages("devtools")
 devtools::install_github('gekim0519/tidyfunfun')
+```
+
+```{r}
+library(tidyfunfun)
 ```
 
 ## Introduction
