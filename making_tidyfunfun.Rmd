@@ -24,6 +24,7 @@ document()
 
 ```{r}
 setwd("..")
+getwd()
 install("tidyfunfun")
 ```
 
@@ -33,6 +34,14 @@ install("tidyfunfun")
 ? gibbs_cs_fpca_tfd
 ? gibbs_cs_wish_tfd
 ```
+
+```{r}
+data(dti)
+gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+
+gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+```
+
 
 ```{r}
 .rs.restartR() 

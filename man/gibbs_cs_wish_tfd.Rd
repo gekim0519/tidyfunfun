@@ -50,7 +50,7 @@ the residual covariance surface using a Wishart prior. As an alteration of
 \dontrun{
 library(ggplot2)
 library(reshape2)
-data(dti)  ##??? should I do data(DTI) and get it from refund? Or include dti data to be included in the package?
+data(dti) 
 
 dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
 gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)

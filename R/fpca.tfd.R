@@ -107,7 +107,6 @@
 ##'
 ##' @importFrom dplyr "%>%" enquo pull select
 ##' @importFrom tidyr spread
-##' @importFrom refund quadWeights
 ##' @importFrom Matrix nearPD Matrix t as.matrix
 ##' @importFrom mgcv gam predict.gam
 ##' @importFrom gamm4 gamm4
