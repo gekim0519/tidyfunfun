@@ -16,9 +16,19 @@ source("./function/fpca.tfd.R")
 source("./function/ols_cs_tfd.R")
 source("./function/gibbs_cs_fpca_tfd.R")
 source("./function/gibbs_cs_wish_tfd.R")
+source("./function/XtSiginvX.R")
 ```
 
-## FDA Functions for tf-Class
+## tidyfunfun
+
+### FDA Functions for tf-Class
+
+## Installation
+
+```{r, message=FALSE}
+# install.packages("devtools")
+devtools::install_github('gekim0519/tidyfunfun')
+```
 
 ## Introduction
 
@@ -59,6 +69,13 @@ dti = with(refund::DTI,
 dti %>%
   head()
 ```
+
+You can also read `dti` directly from the package.
+
+```{r}
+data(dti)
+```
+
 
 Let's get a closer look at `tfd` object, cca. 
 

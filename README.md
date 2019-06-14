@@ -1,5 +1,14 @@
 
-## FDA Functions for tf-Class
+## tidyfunfun
+
+### FDA Functions for tf-Class
+
+## Installation
+
+``` r
+# install.packages("devtools")
+devtools::install_github('gekim0519/tidyfunfun')
+```
 
 ## Introduction
 
@@ -39,7 +48,7 @@ stored as vectors. More information on **`tf`-Class** can be found
     Kennedy-Krieger Institute.
   - `DTI` has 382 rows and 9 columns including two functional covariates
     (`cca`, `rcst`) in forms of matrices.
-  - Using `tidyfun`, new dataframe `dti` has `cca` and `rcst` as `tfd`
+  - Using tidyfun, new dataframe `dti` has `cca` and `rcst` as `tfd`
     objects.
   - Link to further description:
     [rdrr.io/cran/refund/man/DTI.html](rdrr.io/cran/refund/man/DTI.html)
@@ -70,7 +79,13 @@ dti %>%
     ## 5  1005 male      NA contr… 1005_1: (0.000,0.40);(… 1005_1: ( 0.22,0.40);(…
     ## 6  1006 male      NA contr… 1006_1: (0.000,0.45);(… 1006_1: (0.056,0.47);(…
 
-Let’s get a closer look at `tfd` object, `cca`.
+You can also read `dti` directly from the package.
+
+``` r
+data(dti)
+```
+
+Let’s get a closer look at `tfd` object, cca.
 
 ``` r
 dti$cca
@@ -102,7 +117,7 @@ dti %>%
   geom_spaghetti(alpha = .3) + xlab("days") + theme(legend.position="none") + ggtitle("FA tract profiles from the corpus callosum")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ## Functions and Usage
 
@@ -148,7 +163,7 @@ Let’s plot the estimated mean function of `cca`.
 ggplot(fit.mu, aes(x = n, y = mu)) + geom_path() + theme_bw() + ggtitle("Estimated mean function of corpus callosum")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 There are nine basis eigenfunctions in `fit.basis`. Let’s plot the first
 two.
@@ -160,7 +175,7 @@ ggplot(subset(fit.basis.m, variable %in% c('phi.1', 'phi.2')), aes(x = n,
 y = value, group = variable, color = variable)) + geom_path() + theme_bw() + ggtitle("First two estimated FPC basis functions")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 #### Function-on-Scalar Regression (FoSR)
 
@@ -183,7 +198,7 @@ y_i(t) = \\beta_{0}(t) + \\sum x_{ik} \\beta_{k}(t) + \\epsilon_i(t)
     `ols_cs_tfd`’s argument, `data` will be a dataframe with a `tfd`
     type column, which will be the response of the proposed model.
 
-**gibbs\_cs\_fpca\_tfd, gibbs\_cs\_wish\_tfd**
+**gibbs\_cs\_fpca\_tfd**
 
   - Fitting function for FoSR for cross-sectional data, estimates model
     parameters using Gibbs sampler and estimates the residual covariance
@@ -230,7 +245,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw() + ylab("intercept")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
 plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
@@ -238,7 +253,7 @@ ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
    geom_path() + theme_bw() + ylab("slope")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
 
 Above is a graph of estimated coefficient functions (intercept, slope)
 from the three fitting functions.
@@ -263,5 +278,6 @@ to see more examples on the function usages. You can view the
 tidyfun\_explore.md file
 [here](https://github.com/gekim0519/tidyfun_fpca/blob/master/tidyfun_explore/tidyfun_explore.md).
 
-**data** folder contains functional datasets from
+**data** folder contains functional datasets and their alterations that
+are from
 <https://www.psych.mcgill.ca/misc/fda/downloads/FDAfuns/R/data/>.

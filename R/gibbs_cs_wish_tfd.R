@@ -62,30 +62,9 @@
 #' @importFrom splines bs
 #' @importFrom MASS mvrnorm
 #' @importFrom stats rWishart
+#' @importFrom refund XtSiginvX
 #' @export
 #'
-
-Xt_siginv_X = function(tx, siginv, y = NULL){
-
-  D = dim(siginv)[1]
-  I = dim(tx)[2] / D
-  if(is.null(y)){
-    ret.mat = matrix(0, nrow = dim(tx)[1], ncol = dim(tx)[1])
-    for(i in 1:I){
-      ind.cur = (D * (i - 1) + 1) : (D*i)
-      prod.cur = tx[,ind.cur] %*% siginv %*% t(tx[,ind.cur])
-      ret.mat = ret.mat + prod.cur
-    }
-  } else if(!is.null(y)){
-    ret.mat = matrix(0, nrow = dim(tx)[1], ncol = 1)
-    for(i in 1:I){
-      ind.cur = (D * (i - 1) + 1) : (D*i)
-      prod.cur = tx[,ind.cur] %*% siginv %*% y[ind.cur]
-      ret.mat = ret.mat + prod.cur
-    }
-  }
-  return(ret.mat)
-}
 
 gibbs_cs_wish_tfd = function(formula, Kt=5, data=NULL, verbose = TRUE, N.iter = 5000, N.burn = 1000, alpha = .1,
                             min.iter = 10, max.iter = 50, Aw = NULL, Bw = NULL, v = NULL, SEED = NULL){

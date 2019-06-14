@@ -4,49 +4,27 @@
 #' @importFrom MASS mvrnorm
 #' @importFrom stats rWishart
 
-Xt_siginv_X = function(tx, siginv, y = NULL){
-  
-  D = dim(siginv)[1]
-  I = dim(tx)[2] / D
-  if(is.null(y)){
-    ret.mat = matrix(0, nrow = dim(tx)[1], ncol = dim(tx)[1])
-    for(i in 1:I){
-      ind.cur = (D * (i - 1) + 1) : (D*i)
-      prod.cur = tx[,ind.cur] %*% siginv %*% t(tx[,ind.cur])
-      ret.mat = ret.mat + prod.cur
-    }  
-  } else if(!is.null(y)){
-    ret.mat = matrix(0, nrow = dim(tx)[1], ncol = 1)
-    for(i in 1:I){
-      ind.cur = (D * (i - 1) + 1) : (D*i)
-      prod.cur = tx[,ind.cur] %*% siginv %*% y[ind.cur]
-      ret.mat = ret.mat + prod.cur
-    }  
-  }
-  return(ret.mat)
-}
-
 gibbs_cs_wish_tfd = function(formula, Kt=5, data=NULL, verbose = TRUE, N.iter = 5000, N.burn = 1000, alpha = .1,
                             min.iter = 10, max.iter = 50, Aw = NULL, Bw = NULL, v = NULL, SEED = NULL){
-  
-  # depent y is tf 
+
+  # depent y is tf
   col = attr(terms(formula(formula)),"variables")
   col = col[[2]]
   col = enquo(col)
-  
+
   tfd = data %>%
     pull(!! col)
-  
-  stopifnot((!is.null(tfd))) 
-  
-  tfd = tfd %>% 
+
+  stopifnot((!is.null(tfd)))
+
+  tfd = tfd %>%
     as.data.frame() %>%
     spread(key = arg, value = value) %>%
     select(-id) %>%
     as.matrix()
-  
+
   data[as.character(col)[2]]= tfd
-  
+
   call <- match.call()
   tf <- terms.formula(formula, specials = "re")
   trmstrings <- attr(tf, "term.labels")
@@ -79,43 +57,43 @@ gibbs_cs_wish_tfd = function(formula, Kt=5, data=NULL, verbose = TRUE, N.iter = 
     mf_fixed <- model.frame(tf, data = data)
   }
   mt_fixed <- attr(mf_fixed, "terms")
-  
+
   # get response (Y)
   Y <- model.response(mf_fixed, "numeric")
-  
+
   # x is a matrix of fixed effects
   # automatically adds in intercept
   X <- model.matrix(mt_fixed, mf_fixed, contrasts)
-  
+
   if(!is.null(SEED)) { set.seed(SEED) }
-  
+
   ## fixed effect design matrix
   W.des = X
-  
+
   I = dim(Y)[1]
   p = dim(W.des)[2]
   D = dim(Y)[2]
-  
+
   ## bspline basis and penalty matrix
   Theta = splines::bs(1:D, df=Kt, intercept=TRUE, degree=3)
-  
+
   diff0 = diag(1, D, D)
   diff2 = matrix(rep(c(1,-2,1, rep(0, D-2)), D-2)[1:((D-2)*D)], D-2, D, byrow = TRUE)
   P0 = t(Theta) %*% t(diff0) %*% diff0 %*% Theta
   P2 = t(Theta) %*% t(diff2) %*% diff2 %*% Theta
   P.mat = alpha * P0 + (1-alpha) * P2
-  
+
   ## data organization; these computations only need to be done once
   Y.vec = as.vector(t(Y))
   t.designmat.X = t(kronecker(W.des, Theta))
   sig.X = kronecker(t(W.des) %*% W.des, t(Theta)%*% Theta)
-  
+
   ## initial estimation and hyperparameter choice
   vec.BW = solve(kronecker(t(W.des)%*% W.des, t(Theta) %*% Theta)) %*% t(kronecker(W.des, Theta)) %*% Y.vec
   mu.q.BW = matrix(vec.BW, Kt, p)
-  
+
   Yhat = as.matrix(W.des %*% t(mu.q.BW) %*% t(Theta))
-  
+
   if(is.null(v)){
     fpca.temp = fpca.sc(Y = Y - Yhat, pve = .95, var = TRUE)
     cov.hat = fpca.temp$efunctions %*% tcrossprod(diag(fpca.temp$evalues, nrow = length(fpca.temp$evalues),
@@ -125,17 +103,17 @@ gibbs_cs_wish_tfd = function(formula, Kt=5, data=NULL, verbose = TRUE, N.iter = 
   } else {
     Psi = diag(v, D, D)
   }
-  
+
   v = ifelse(is.null(v), I, v)
   inv.sig = solve(Psi/v)
-  
+
   Aw = ifelse(is.null(Aw), Kt/2, Aw)
   if(is.null(Bw)){
     Bw = b.q.lambda.BW = sapply(1:p, function(u) max(1, .5*sum(diag( t(mu.q.BW[,u]) %*% P.mat %*% (mu.q.BW[,u])))))
   } else {
     Bw = b.q.lambda.BW = rep(Bw, p)
   }
-  
+
   ## matrices to store within-iteration estimates
   BW = array(NA, c(Kt, p, N.iter))
   BW[,,1] = bw = matrix(rnorm(Kt * p, 0, 10), Kt, p)
@@ -143,60 +121,60 @@ gibbs_cs_wish_tfd = function(formula, Kt=5, data=NULL, verbose = TRUE, N.iter = 
   INV.SIG[,,1] = inv.sig = diag(10, D, D)
   LAMBDA.BW = matrix(NA, nrow = N.iter, ncol = p)
   LAMBDA.BW[1,] = lambda.bw = runif(p, .1, 10)
-  
+
   y.post = array(NA, dim = c(I, D, (N.iter - N.burn)))
-  
+
   if(verbose) { cat("Beginning Sampler \n") }
-  
+
   for(i in 1:N.iter){
-    
+
     ###############################################################
     ## update b-spline parameters for fixed effects
     ###############################################################
-    
+
     sigma = solve(Xt_siginv_X(tx = t.designmat.X, siginv = inv.sig) +
                     kronecker(diag(lambda.bw), P.mat ))
     mu = sigma %*% Xt_siginv_X(tx = t.designmat.X, siginv = inv.sig, y = Y.vec)
-    
+
     bw = matrix(MASS::mvrnorm(1, mu = mu, Sigma = sigma), nrow = Kt, ncol = p)
-    
+
     beta.cur = t(bw) %*% t(Theta)
-    
+
     ###############################################################
     ## update inverse covariance matrix
     ###############################################################
-    
+
     resid.cur = Y - W.des %*% beta.cur
     inv.sig = stats::rWishart(1, v + I, solve(Psi + t(resid.cur) %*% resid.cur))[,,1]
-    
+
     ###############################################################
     ## update variance components
     ###############################################################
-    
+
     ## lambda for beta's
     for(term in 1:p){
       a.post = Aw + Kt/2
       b.post = Bw[term] + 1/2 * bw[,term] %*% P.mat %*% bw[,term]
       lambda.bw[term] = rgamma(1, a.post, b.post)
     }
-    
+
     ###############################################################
     ## save this iteration's parameters
     ###############################################################
-    
+
     BW[,,i] = as.matrix(bw)
-    
+
     INV.SIG[,,i] = inv.sig
     LAMBDA.BW[i,] = lambda.bw
-    
+
     if(verbose) { if(round(i %% (N.iter/10)) == 0) {cat(".")} }
-    
+
   }
-  
+
   ###############################################################
   ## compute posteriors for this dataset
   ###############################################################
-  
+
   ## main effects
   beta.post = array(NA, dim = c(p, D, (N.iter - N.burn)))
   for(n in 1:(N.iter - N.burn)){
@@ -205,19 +183,19 @@ gibbs_cs_wish_tfd = function(formula, Kt=5, data=NULL, verbose = TRUE, N.iter = 
   beta.pm = apply(beta.post, c(1,2), mean)
   beta.LB = apply(beta.post, c(1,2), quantile, c(.025))
   beta.UB = apply(beta.post, c(1,2), quantile, c(.975))
-  
-  
+
+
   ## covariance matrix
   sig.pm = solve(apply(INV.SIG, c(1,2), mean))
-  
+
   ## export fitted values
   fixef.pm = W.des %*% beta.pm
-  
+
   data = if(is.null(data)) { mf_fixed }  else { data }
-  
+
   ret = list(beta.pm, beta.UB, beta.LB, fixef.pm, mt_fixed, data)
   names(ret) = c("beta.hat", "beta.UB", "beta.LB", "Yhat", "terms", "data")
   class(ret) = "fosr"
   ret
-  
+
 }
