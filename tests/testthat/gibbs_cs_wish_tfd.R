@@ -1,16 +1,75 @@
-#' Used libraries
-#' @importFrom dplyr enquo %>%
+#' Cross-sectional FoSR using a Gibbs sampler and Wishart prior
+#'
+#' Fitting function for function-on-scalar regression for cross-sectional data.
+#' This function estimates model parameters using a Gibbs sampler and estimates
+#' the residual covariance surface using a Wishart prior. As an alteration of
+#' `refund::gibbs_cs_wish`, this function takes in a dataframewith tfd column as an input.
+#'
+#' @param formula a formula indicating the structure of the proposed model.
+#' @param Kt number of spline basis functions used to estimate coefficient functions
+#' @param data an data frame, list or environment containing the
+#' variables in the model. This includes the response variable of the formula which
+#' should be a tfd class.
+#' @param N.iter number of iterations used in the Gibbs sampler
+#' @param N.burn number of iterations discarded as burn-in
+#' @param alpha tuning parameter balancing second-derivative penalty and
+#' zeroth-derivative penalty (alpha = 0 is all second-derivative penalty)
+#' @param Aw hyperparameter for inverse gamma controlling variance of spline terms
+#' for population-level effects
+#' @param Bw hyperparameter for inverse gamma controlling variance of spline terms
+#' for population-level effects
+#' @param v hyperparameter for inverse Wishart prior on residual covariance
+#' @param SEED seed value to start the sampler; ensures reproducibility
+#' @param verbose logical defaulting to \code{TRUE} -- should updates on progress be printed?
+#' @param min.iter minimum number of iterations
+#' @param max.iter maximum number of iterations
+#'
+#' @references
+#' Goldsmith, J., Kitago, T. (2016).
+#' Assessing Systematic Effects of Stroke on Motor Control using Hierarchical
+#' Function-on-Scalar Regression. \emph{Journal of the Royal Statistical Society:
+#' Series C}, 65 215-236.
+#'
+#' @author Gaeun Kim \email{gk2501@columbia.edu} and
+#' Jeff Goldsmith \email{ajg2202@@cumc.columbia.edu}
+#'
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' library(reshape2)
+#' data(dti) 
+#' 
+#' dti.ols = ols_cs_tfd(cca ~ pasat, data = dti, Kt = 10)
+#' gibbs_dti = gibbs_cs_fpca_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+#' gibbs_dti_wish = gibbs_dti_wish = gibbs_cs_wish_tfd(cca ~ pasat, data = dti, Kt = 10, N.iter = 500, N.burn = 200)
+#' models = c("dti.ols", "gibbs_dti", "gibbs_dti_wish")
+#' intercepts = sapply(models, function(u) get(u)$beta.hat[1,])
+#' slopes = sapply(models, function(u) get(u)$beta.hat[2,])
+#'
+#' ## graph of estimated coefficient functions (intercept, slope)
+#'
+#' plot.dat = melt(intercepts); colnames(plot.dat) = c("grid", "method", "value")
+#' ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
+#'   geom_path() + theme_bw() + ylab("intercept")
+#'
+#' plot.dat = melt(slopes); colnames(plot.dat) = c("grid", "method", "value")
+#' ggplot(plot.dat, aes(x = grid, y = value, group = method, color = method)) +
+#'   geom_path() + theme_bw() + ylab("slope")
+#' }
+#'
+#' @importFrom dplyr "%>%" enquo pull select
+#' @importFrom tidyr spread
 #' @importFrom splines bs
 #' @importFrom MASS mvrnorm
 #' @importFrom stats rWishart
-
+#' @export
 gibbs_cs_wish_tfd = function(formula, Kt=5, data=NULL, verbose = TRUE, N.iter = 5000, N.burn = 1000, alpha = .1,
                             min.iter = 10, max.iter = 50, Aw = NULL, Bw = NULL, v = NULL, SEED = NULL){
 
   # depent y is tf
   col = attr(terms(formula(formula)),"variables")
   col = col[[2]]
-  col = enquo(col)
+  col = dplyr::enquo(col)
 
   tfd = data %>%
     pull(!! col)
