@@ -3,9 +3,9 @@
 
 ### FDA Functions for tf-Class
 
-This package extends functions for FDA in **`tidyfun`**. Specfically,
-four functions were made for conducting **fpca** and
-**function-on-scalar regression** on **`tfd`** data types.
+This package extends functions for FDA in **`tidyfun`**. The functions
+were made for conducting **fpca** and **function-on-scalar regression**
+on **`tfd`** data types.
 
 Functional principal components analysis on tf data types is implemented
 in **`fpca.tfd`**.
