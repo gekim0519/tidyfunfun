@@ -15,20 +15,23 @@ data is implemented in **`ols_cs_tfd`**, **`gibbs_cs_fpca_tfd`**,
 **`gibbs_cs_wish_tfd`**.
 
 The functions are modified from the **`refund`** package
-([link](https://github.com/refunders/refundable)) to take in a dataframe
+([link](https://github.com/refunders/refund)) to take in a dataframe
 containing `tfd` columns directly as an input.
 
 ## Installation
 
-Installation to tidyfunfun
+Installation to **`tidyfunfun`**
 
 ``` r
 # install.packages("devtools")
 devtools::install_github('gekim0519/tidyfunfun')
 ```
 
-Installation to tidyfun
+Installation to **`tidyfun`**
 
 ``` r
 devtools::install_github("fabian-s/tidyfun")
 ```
+
+To check out **`tidyfun`** visit
+[here](https://github.com/fabian-s/tidyfun).
