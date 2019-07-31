@@ -7,7 +7,7 @@ Depends: R (>= 3.5.1)
 Imports:
   mgcv (>= 1.8-23),
     MASS, Matrix, dplyr, gamm4, lme4, mgcv, pbs, tidyr
-License: What license is it under?
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
