@@ -99,7 +99,7 @@ framework is used to estimate curve-specific scores and variances.
 \dontrun{
 library(ggplot2)
 library(reshape2)
-data(dti)  ##??? should I do data(DTI) and get it from refund? Or include dti data to be included in the package?
+data(dti)
 
 fit.cca = fpca.tfd(data = dti, col = cca)
 fit.mu = data.frame(mu = fit.cca$mu,
